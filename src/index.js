@@ -1,6 +1,7 @@
 import fetch from "node-fetch";
 import FormData from "form-data";
 import { URLSearchParams } from "url";
+//#region Function API
 const authorize = async ({ clientId, clientSecret, code, redirectUri }) => {
   const body = new URLSearchParams({
     client_id: clientId,
@@ -149,6 +150,8 @@ const remove = async ({ path, id, accessToken }) => {
     throw text;
   }
 };
+//#endregion
+//#region Clio class
 class Clio {
   constructor({
     clientId,
@@ -204,7 +207,7 @@ class Clio {
     if (!this.accessToken) await this.getAccessToken();
     return create({ path, fields, data, accessToken: this.accessToken });
   }
-  async update({ path, fields, etag, data }) {
+  async update({ path, id, fields, etag, data }) {
     if (!this.accessToken) await this.getAccessToken();
     return update({
       path,
@@ -224,6 +227,8 @@ class Clio {
     return new ClioEntity(this, { properties, fields, id, type });
   }
 }
+//#endregion
+//#region ClioEntity Class
 class ClioEntity {
   constructor(clio, { etag, id, properties, fields, type }) {
     this.clio = clio;
@@ -246,6 +251,7 @@ class ClioEntity {
     return this.clio.remove({ path: this.type, id: this.id });
   }
 }
+//#endregion
 export {
   Clio,
   ClioEntity,
