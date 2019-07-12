@@ -18,8 +18,7 @@ function () {
   var _ref2 = _asyncToGenerator(
   /*#__PURE__*/
   _regeneratorRuntime.mark(function _callee(_ref) {
-    var clientId, clientSecret, code, redirectUri, body, res, _ref3, access_token, refresh_token, expires_in;
-
+    var clientId, clientSecret, code, redirectUri, body, res, text, obj, access_token, refresh_token, expires_in;
     return _regeneratorRuntime.wrap(function _callee$(_context) {
       while (1) {
         switch (_context.prev = _context.next) {
@@ -32,30 +31,33 @@ function () {
               redirect_uri: redirectUri,
               grant_type: "authorization_code"
             });
+            console.log("sending authorize request");
             console.log(body.toString());
-            _context.next = 5;
+            _context.next = 6;
             return fetch("https://app.clio.com/oauth/token", {
               method: "post",
               body: body
             });
 
-          case 5:
+          case 6:
             res = _context.sent;
-            _context.next = 8;
-            return res.json();
+            _context.next = 9;
+            return res.text();
 
-          case 8:
-            _ref3 = _context.sent;
-            access_token = _ref3.access_token;
-            refresh_token = _ref3.refresh_token;
-            expires_in = _ref3.expires_in;
+          case 9:
+            text = _context.sent;
+            console.log("I got text");
+            console.log(text);
+            obj = JSON.parse(text);
+            console.log("Obj result is ", obj);
+            access_token = obj.access_token, refresh_token = obj.refresh_token, expires_in = obj.expires_in;
             return _context.abrupt("return", {
               accessToken: access_token,
               refreshToken: refresh_token,
               expiresIn: expires_in
             });
 
-          case 13:
+          case 16:
           case "end":
             return _context.stop();
         }
@@ -71,45 +73,49 @@ function () {
 var _getAccessToken =
 /*#__PURE__*/
 function () {
-  var _ref5 = _asyncToGenerator(
+  var _ref4 = _asyncToGenerator(
   /*#__PURE__*/
-  _regeneratorRuntime.mark(function _callee2(_ref4) {
-    var clientId, clientSecret, refreshToken, body, res, _ref6, access_token, refresh_token, expires_in;
+  _regeneratorRuntime.mark(function _callee2(_ref3) {
+    var clientId, clientSecret, refreshToken, body, res, _ref5, access_token, refresh_token, expires_in;
 
     return _regeneratorRuntime.wrap(function _callee2$(_context2) {
       while (1) {
         switch (_context2.prev = _context2.next) {
           case 0:
-            clientId = _ref4.clientId, clientSecret = _ref4.clientSecret, refreshToken = _ref4.refreshToken;
+            clientId = _ref3.clientId, clientSecret = _ref3.clientSecret, refreshToken = _ref3.refreshToken;
             body = new URLSearchParams({
               client_id: clientId,
               client_secret: clientSecret,
               refresh_token: refreshToken,
               grant_type: "refresh_token"
             });
-            _context2.next = 4;
+            console.log("sending authorize request wih ");
+            console.log(body);
+            _context2.next = 6;
             return fetch("https://app.clio.com/oauth/token", {
               method: "post",
               body: body
             });
 
-          case 4:
+          case 6:
             res = _context2.sent;
-            _context2.next = 7;
+            console.log("got res from my request");
+            console.log(res);
+            _context2.next = 11;
             return res.json();
 
-          case 7:
-            _ref6 = _context2.sent;
-            access_token = _ref6.access_token;
-            refresh_token = _ref6.refresh_token;
-            expires_in = _ref6.expires_in;
+          case 11:
+            _ref5 = _context2.sent;
+            access_token = _ref5.access_token;
+            refresh_token = _ref5.refresh_token;
+            expires_in = _ref5.expires_in;
             return _context2.abrupt("return", {
               accessToken: access_token,
               refreshToken: refresh_token,
               expiresIn: expires_in
             });
 
-          case 12:
+          case 16:
           case "end":
             return _context2.stop();
         }
@@ -118,7 +124,7 @@ function () {
   }));
 
   return function getAccessToken(_x2) {
-    return _ref5.apply(this, arguments);
+    return _ref4.apply(this, arguments);
   };
 }();
 
@@ -138,26 +144,26 @@ var makeFields = function makeFields(fields) {
 var _gets =
 /*#__PURE__*/
 function () {
-  var _ref8 = _asyncToGenerator(
+  var _ref7 = _asyncToGenerator(
   /*#__PURE__*/
-  _regeneratorRuntime.mark(function _callee3(_ref7) {
+  _regeneratorRuntime.mark(function _callee3(_ref6) {
     var path, fields, accessToken, args, headers, url, ret, _text, obj;
 
     return _regeneratorRuntime.wrap(function _callee3$(_context3) {
       while (1) {
         switch (_context3.prev = _context3.next) {
           case 0:
-            path = _ref7.path, fields = _ref7.fields, accessToken = _ref7.accessToken, args = _objectWithoutProperties(_ref7, ["path", "fields", "accessToken"]);
+            path = _ref6.path, fields = _ref6.fields, accessToken = _ref6.accessToken, args = _objectWithoutProperties(_ref6, ["path", "fields", "accessToken"]);
             headers = {
               Authorization: "Bearer ".concat(accessToken)
             };
             url = new URL("https://app.clio.com/api/v4");
             url.pathname = "".concat(url.pathname, "/").concat(path, ".json");
             url.searchParams.append("fields", makeFields(fields));
-            Object.entries(args).forEach(function (_ref9) {
-              var _ref10 = _slicedToArray(_ref9, 2),
-                  k = _ref10[0],
-                  v = _ref10[1];
+            Object.entries(args).forEach(function (_ref8) {
+              var _ref9 = _slicedToArray(_ref8, 2),
+                  k = _ref9[0],
+                  v = _ref9[1];
 
               return url.searchParams.append(k, v);
             });
@@ -194,23 +200,23 @@ function () {
   }));
 
   return function gets(_x3) {
-    return _ref8.apply(this, arguments);
+    return _ref7.apply(this, arguments);
   };
 }();
 
 var _create =
 /*#__PURE__*/
 function () {
-  var _ref12 = _asyncToGenerator(
+  var _ref11 = _asyncToGenerator(
   /*#__PURE__*/
-  _regeneratorRuntime.mark(function _callee4(_ref11) {
+  _regeneratorRuntime.mark(function _callee4(_ref10) {
     var path, fields, data, accessToken, headers, url, body, ret, _text2, obj;
 
     return _regeneratorRuntime.wrap(function _callee4$(_context4) {
       while (1) {
         switch (_context4.prev = _context4.next) {
           case 0:
-            path = _ref11.path, fields = _ref11.fields, data = _ref11.data, accessToken = _ref11.accessToken;
+            path = _ref10.path, fields = _ref10.fields, data = _ref10.data, accessToken = _ref10.accessToken;
             headers = {
               Authorization: "Bearer ".concat(accessToken)
             };
@@ -253,23 +259,23 @@ function () {
   }));
 
   return function create(_x4) {
-    return _ref12.apply(this, arguments);
+    return _ref11.apply(this, arguments);
   };
 }();
 
 var _get =
 /*#__PURE__*/
 function () {
-  var _ref14 = _asyncToGenerator(
+  var _ref13 = _asyncToGenerator(
   /*#__PURE__*/
-  _regeneratorRuntime.mark(function _callee5(_ref13) {
+  _regeneratorRuntime.mark(function _callee5(_ref12) {
     var path, id, fields, accessToken, headers, url, ret, _text3, obj;
 
     return _regeneratorRuntime.wrap(function _callee5$(_context5) {
       while (1) {
         switch (_context5.prev = _context5.next) {
           case 0:
-            path = _ref13.path, id = _ref13.id, fields = _ref13.fields, accessToken = _ref13.accessToken;
+            path = _ref12.path, id = _ref12.id, fields = _ref12.fields, accessToken = _ref12.accessToken;
             headers = {
               Authorization: "Bearer ".concat(accessToken)
             };
@@ -309,29 +315,29 @@ function () {
   }));
 
   return function get(_x5) {
-    return _ref14.apply(this, arguments);
+    return _ref13.apply(this, arguments);
   };
 }();
 
 var _update =
 /*#__PURE__*/
 function () {
-  var _ref16 = _asyncToGenerator(
+  var _ref15 = _asyncToGenerator(
   /*#__PURE__*/
-  _regeneratorRuntime.mark(function _callee6(_ref15) {
+  _regeneratorRuntime.mark(function _callee6(_ref14) {
     var etag, path, id, fields, data, accessToken, body, headers, url, ret, _text4, obj;
 
     return _regeneratorRuntime.wrap(function _callee6$(_context6) {
       while (1) {
         switch (_context6.prev = _context6.next) {
           case 0:
-            etag = _ref15.etag, path = _ref15.path, id = _ref15.id, fields = _ref15.fields, data = _ref15.data, accessToken = _ref15.accessToken;
+            etag = _ref14.etag, path = _ref14.path, id = _ref14.id, fields = _ref14.fields, data = _ref14.data, accessToken = _ref14.accessToken;
             if (!etag) etag = data.etag;
             body = new FormData();
-            Object.entries(data).map(function (_ref17) {
-              var _ref18 = _slicedToArray(_ref17, 2),
-                  k = _ref18[0],
-                  v = _ref18[1];
+            Object.entries(data).map(function (_ref16) {
+              var _ref17 = _slicedToArray(_ref16, 2),
+                  k = _ref17[0],
+                  v = _ref17[1];
 
               return body.append(k, v);
             });
@@ -376,23 +382,23 @@ function () {
   }));
 
   return function update(_x6) {
-    return _ref16.apply(this, arguments);
+    return _ref15.apply(this, arguments);
   };
 }();
 
 var _remove =
 /*#__PURE__*/
 function () {
-  var _ref20 = _asyncToGenerator(
+  var _ref19 = _asyncToGenerator(
   /*#__PURE__*/
-  _regeneratorRuntime.mark(function _callee7(_ref19) {
+  _regeneratorRuntime.mark(function _callee7(_ref18) {
     var path, id, accessToken, headers, url, ret, _text5, obj;
 
     return _regeneratorRuntime.wrap(function _callee7$(_context7) {
       while (1) {
         switch (_context7.prev = _context7.next) {
           case 0:
-            path = _ref19.path, id = _ref19.id, accessToken = _ref19.accessToken;
+            path = _ref18.path, id = _ref18.id, accessToken = _ref18.accessToken;
             headers = {
               Authorization: "Bearer ".concat(accessToken)
             };
@@ -431,19 +437,21 @@ function () {
   }));
 
   return function remove(_x7) {
-    return _ref20.apply(this, arguments);
+    return _ref19.apply(this, arguments);
   };
-}();
+}(); //#endregion
+//#region Clio class
+
 
 var Clio =
 /*#__PURE__*/
 function () {
-  function Clio(_ref21) {
-    var clientId = _ref21.clientId,
-        clientSecret = _ref21.clientSecret,
-        refreshToken = _ref21.refreshToken,
-        accessToken = _ref21.accessToken,
-        onNewRefreshToken = _ref21.onNewRefreshToken;
+  function Clio(_ref20) {
+    var clientId = _ref20.clientId,
+        clientSecret = _ref20.clientSecret,
+        refreshToken = _ref20.refreshToken,
+        accessToken = _ref20.accessToken,
+        onNewRefreshToken = _ref20.onNewRefreshToken;
 
     _classCallCheck(this, Clio);
 
@@ -460,14 +468,14 @@ function () {
     value: function () {
       var _authorize2 = _asyncToGenerator(
       /*#__PURE__*/
-      _regeneratorRuntime.mark(function _callee8(_ref22) {
-        var code, redirectUri, _ref23, refreshToken, accessToken;
+      _regeneratorRuntime.mark(function _callee8(_ref21) {
+        var code, redirectUri, _ref22, refreshToken, accessToken;
 
         return _regeneratorRuntime.wrap(function _callee8$(_context8) {
           while (1) {
             switch (_context8.prev = _context8.next) {
               case 0:
-                code = _ref22.code, redirectUri = _ref22.redirectUri;
+                code = _ref21.code, redirectUri = _ref21.redirectUri;
 
                 if (!(!code || !redirectUri)) {
                   _context8.next = 3;
@@ -486,14 +494,27 @@ function () {
                 });
 
               case 5:
-                _ref23 = _context8.sent;
-                refreshToken = _ref23.refreshToken;
-                accessToken = _ref23.accessToken;
+                _ref22 = _context8.sent;
+                refreshToken = _ref22.refreshToken;
+                accessToken = _ref22.accessToken;
+
+                if (!accessToken) {
+                  _context8.next = 15;
+                  break;
+                }
+
                 this.accessToken = accessToken;
                 this.refreshToken = refreshToken;
-                if (this.onNewRefreshToken) this.onNewRefreshToken(refreshToken);
+                if (refreshToken && this.onNewRefreshToken) this.onNewRefreshToken(refreshToken);
+                return _context8.abrupt("return", {
+                  accessToken: accessToken,
+                  refreshToken: refreshToken
+                });
 
-              case 11:
+              case 15:
+                throw "could not authorize with these credentials";
+
+              case 16:
               case "end":
                 return _context8.stop();
             }
@@ -508,36 +529,115 @@ function () {
       return authorize;
     }()
   }, {
-    key: "getAccessToken",
+    key: "getRefreshToken",
     value: function () {
-      var _getAccessToken2 = _asyncToGenerator(
+      var _getRefreshToken2 = _asyncToGenerator(
       /*#__PURE__*/
       _regeneratorRuntime.mark(function _callee9() {
-        var _ref24, accessToken, newToken;
-
         return _regeneratorRuntime.wrap(function _callee9$(_context9) {
           while (1) {
             switch (_context9.prev = _context9.next) {
               case 0:
-                if (this.refreshToken) {
-                  _context9.next = 2;
+                return _context9.abrupt("return", this.refreshToken());
+
+              case 1:
+              case "end":
+                return _context9.stop();
+            }
+          }
+        }, _callee9, this);
+      }));
+
+      function getRefreshToken() {
+        return _getRefreshToken2.apply(this, arguments);
+      }
+
+      return getRefreshToken;
+    }()
+  }, {
+    key: "_getRefreshToken",
+    value: function () {
+      var _getRefreshToken3 = _asyncToGenerator(
+      /*#__PURE__*/
+      _regeneratorRuntime.mark(function _callee10() {
+        return _regeneratorRuntime.wrap(function _callee10$(_context10) {
+          while (1) {
+            switch (_context10.prev = _context10.next) {
+              case 0:
+                if (!this.refreshToken) {
+                  _context10.next = 2;
+                  break;
+                }
+
+                return _context10.abrupt("return", this.refreshToken);
+
+              case 2:
+                _context10.next = 4;
+                return this.getRefreshToken();
+
+              case 4:
+                this.refreshToken = _context10.sent;
+                return _context10.abrupt("return", this.refreshToken);
+
+              case 6:
+              case "end":
+                return _context10.stop();
+            }
+          }
+        }, _callee10, this);
+      }));
+
+      function _getRefreshToken() {
+        return _getRefreshToken3.apply(this, arguments);
+      }
+
+      return _getRefreshToken;
+    }()
+  }, {
+    key: "getAccessToken",
+    value: function () {
+      var _getAccessToken2 = _asyncToGenerator(
+      /*#__PURE__*/
+      _regeneratorRuntime.mark(function _callee11() {
+        var refreshToken, _ref23, accessToken, newToken;
+
+        return _regeneratorRuntime.wrap(function _callee11$(_context11) {
+          while (1) {
+            switch (_context11.prev = _context11.next) {
+              case 0:
+                if (!this.accessToken) {
+                  _context11.next = 2;
+                  break;
+                }
+
+                return _context11.abrupt("return", this.accessToken());
+
+              case 2:
+                _context11.next = 4;
+                return _getRefreshToken();
+
+              case 4:
+                refreshToken = _context11.sent;
+
+                if (refreshToken) {
+                  _context11.next = 7;
                   break;
                 }
 
                 throw "Cannot get an access token without a refresh token";
 
-              case 2:
-                _context9.next = 4;
+              case 7:
+                _context11.next = 9;
                 return _getAccessToken({
                   clientId: this.clientId,
                   clientSecret: this.clientSecret,
-                  refreshToken: this.refreshToken
+                  refreshToken: refreshToken
                 });
 
-              case 4:
-                _ref24 = _context9.sent;
-                accessToken = _ref24.accessToken;
-                newToken = _ref24.refreshToken;
+              case 9:
+                _ref23 = _context11.sent;
+                accessToken = _ref23.accessToken;
+                newToken = _ref23.refreshToken;
                 this.accessToken = accessToken;
 
                 if (newToken) {
@@ -545,12 +645,14 @@ function () {
                   if (this.onNewRefreshToken) this.onNewRefreshToken(newToken);
                 }
 
-              case 9:
+                return _context11.abrupt("return", history.accessToken);
+
+              case 15:
               case "end":
-                return _context9.stop();
+                return _context11.stop();
             }
           }
-        }, _callee9, this);
+        }, _callee11, this);
       }));
 
       function getAccessToken() {
@@ -564,36 +666,31 @@ function () {
     value: function () {
       var _get2 = _asyncToGenerator(
       /*#__PURE__*/
-      _regeneratorRuntime.mark(function _callee10(_ref25) {
-        var path, id, fields;
-        return _regeneratorRuntime.wrap(function _callee10$(_context10) {
+      _regeneratorRuntime.mark(function _callee12(_ref24) {
+        var path, id, fields, accessToken;
+        return _regeneratorRuntime.wrap(function _callee12$(_context12) {
           while (1) {
-            switch (_context10.prev = _context10.next) {
+            switch (_context12.prev = _context12.next) {
               case 0:
-                path = _ref25.path, id = _ref25.id, fields = _ref25.fields;
-
-                if (this.accessToken) {
-                  _context10.next = 4;
-                  break;
-                }
-
-                _context10.next = 4;
+                path = _ref24.path, id = _ref24.id, fields = _ref24.fields;
+                _context12.next = 3;
                 return this.getAccessToken();
 
-              case 4:
-                return _context10.abrupt("return", _get({
+              case 3:
+                accessToken = _context12.sent;
+                return _context12.abrupt("return", _get({
                   path: path,
                   id: id,
                   fields: fields,
-                  accessToken: this.accessToken
+                  accessToken: accessToken
                 }));
 
               case 5:
               case "end":
-                return _context10.stop();
+                return _context12.stop();
             }
           }
-        }, _callee10, this);
+        }, _callee12, this);
       }));
 
       function get(_x9) {
@@ -607,35 +704,30 @@ function () {
     value: function () {
       var _gets2 = _asyncToGenerator(
       /*#__PURE__*/
-      _regeneratorRuntime.mark(function _callee11(_ref26) {
-        var path, fields;
-        return _regeneratorRuntime.wrap(function _callee11$(_context11) {
+      _regeneratorRuntime.mark(function _callee13(_ref25) {
+        var path, fields, accessToken;
+        return _regeneratorRuntime.wrap(function _callee13$(_context13) {
           while (1) {
-            switch (_context11.prev = _context11.next) {
+            switch (_context13.prev = _context13.next) {
               case 0:
-                path = _ref26.path, fields = _ref26.fields;
-
-                if (this.accessToken) {
-                  _context11.next = 4;
-                  break;
-                }
-
-                _context11.next = 4;
+                path = _ref25.path, fields = _ref25.fields;
+                _context13.next = 3;
                 return this.getAccessToken();
 
-              case 4:
-                return _context11.abrupt("return", _gets({
+              case 3:
+                accessToken = _context13.sent;
+                return _context13.abrupt("return", _gets({
                   path: path,
                   fields: fields,
-                  accessToken: this.accessToken
+                  accessToken: accessToken
                 }));
 
               case 5:
               case "end":
-                return _context11.stop();
+                return _context13.stop();
             }
           }
-        }, _callee11, this);
+        }, _callee13, this);
       }));
 
       function gets(_x10) {
@@ -649,36 +741,31 @@ function () {
     value: function () {
       var _create2 = _asyncToGenerator(
       /*#__PURE__*/
-      _regeneratorRuntime.mark(function _callee12(_ref27) {
-        var path, fields, data;
-        return _regeneratorRuntime.wrap(function _callee12$(_context12) {
+      _regeneratorRuntime.mark(function _callee14(_ref26) {
+        var path, fields, data, accessToken;
+        return _regeneratorRuntime.wrap(function _callee14$(_context14) {
           while (1) {
-            switch (_context12.prev = _context12.next) {
+            switch (_context14.prev = _context14.next) {
               case 0:
-                path = _ref27.path, fields = _ref27.fields, data = _ref27.data;
-
-                if (this.accessToken) {
-                  _context12.next = 4;
-                  break;
-                }
-
-                _context12.next = 4;
+                path = _ref26.path, fields = _ref26.fields, data = _ref26.data;
+                _context14.next = 3;
                 return this.getAccessToken();
 
-              case 4:
-                return _context12.abrupt("return", _create({
+              case 3:
+                accessToken = _context14.sent;
+                return _context14.abrupt("return", _create({
                   path: path,
                   fields: fields,
                   data: data,
-                  accessToken: this.accessToken
+                  accessToken: accessToken
                 }));
 
               case 5:
               case "end":
-                return _context12.stop();
+                return _context14.stop();
             }
           }
-        }, _callee12, this);
+        }, _callee14, this);
       }));
 
       function create(_x11) {
@@ -692,38 +779,33 @@ function () {
     value: function () {
       var _update2 = _asyncToGenerator(
       /*#__PURE__*/
-      _regeneratorRuntime.mark(function _callee13(_ref28) {
-        var path, fields, etag, data;
-        return _regeneratorRuntime.wrap(function _callee13$(_context13) {
+      _regeneratorRuntime.mark(function _callee15(_ref27) {
+        var path, id, fields, etag, data, accessToken;
+        return _regeneratorRuntime.wrap(function _callee15$(_context15) {
           while (1) {
-            switch (_context13.prev = _context13.next) {
+            switch (_context15.prev = _context15.next) {
               case 0:
-                path = _ref28.path, fields = _ref28.fields, etag = _ref28.etag, data = _ref28.data;
-
-                if (this.accessToken) {
-                  _context13.next = 4;
-                  break;
-                }
-
-                _context13.next = 4;
+                path = _ref27.path, id = _ref27.id, fields = _ref27.fields, etag = _ref27.etag, data = _ref27.data;
+                _context15.next = 3;
                 return this.getAccessToken();
 
-              case 4:
-                return _context13.abrupt("return", _update({
+              case 3:
+                accessToken = _context15.sent;
+                return _context15.abrupt("return", _update({
                   path: path,
                   id: id,
                   fields: fields,
                   data: data,
                   etag: etag,
-                  accessToken: this.accessToken
+                  accessToken: accessToken
                 }));
 
               case 5:
               case "end":
-                return _context13.stop();
+                return _context15.stop();
             }
           }
-        }, _callee13, this);
+        }, _callee15, this);
       }));
 
       function update(_x12) {
@@ -737,35 +819,30 @@ function () {
     value: function () {
       var _remove2 = _asyncToGenerator(
       /*#__PURE__*/
-      _regeneratorRuntime.mark(function _callee14(_ref29) {
-        var path, id;
-        return _regeneratorRuntime.wrap(function _callee14$(_context14) {
+      _regeneratorRuntime.mark(function _callee16(_ref28) {
+        var path, id, accessToken;
+        return _regeneratorRuntime.wrap(function _callee16$(_context16) {
           while (1) {
-            switch (_context14.prev = _context14.next) {
+            switch (_context16.prev = _context16.next) {
               case 0:
-                path = _ref29.path, id = _ref29.id;
-
-                if (this.accessToken) {
-                  _context14.next = 4;
-                  break;
-                }
-
-                _context14.next = 4;
+                path = _ref28.path, id = _ref28.id;
+                _context16.next = 3;
                 return this.getAccessToken();
 
-              case 4:
-                return _context14.abrupt("return", _remove({
+              case 3:
+                accessToken = _context16.sent;
+                return _context16.abrupt("return", _remove({
                   path: path,
                   id: id,
-                  accessToken: this.accessToken
+                  accessToken: accessToken
                 }));
 
               case 5:
               case "end":
-                return _context14.stop();
+                return _context16.stop();
             }
           }
-        }, _callee14, this);
+        }, _callee16, this);
       }));
 
       function remove(_x13) {
@@ -779,25 +856,25 @@ function () {
     value: function () {
       var _getEntity = _asyncToGenerator(
       /*#__PURE__*/
-      _regeneratorRuntime.mark(function _callee15(type, id) {
+      _regeneratorRuntime.mark(function _callee17(type, id) {
         var fields,
             properties,
-            _args15 = arguments;
-        return _regeneratorRuntime.wrap(function _callee15$(_context15) {
+            _args17 = arguments;
+        return _regeneratorRuntime.wrap(function _callee17$(_context17) {
           while (1) {
-            switch (_context15.prev = _context15.next) {
+            switch (_context17.prev = _context17.next) {
               case 0:
-                fields = _args15.length > 2 && _args15[2] !== undefined ? _args15[2] : null;
-                _context15.next = 3;
-                return _get({
+                fields = _args17.length > 2 && _args17[2] !== undefined ? _args17[2] : null;
+                _context17.next = 3;
+                return this.get({
                   path: type,
                   id: id,
                   fields: fields
                 });
 
               case 3:
-                properties = _context15.sent;
-                return _context15.abrupt("return", new ClioEntity(this, {
+                properties = _context17.sent;
+                return _context17.abrupt("return", new ClioEntity(this, {
                   properties: properties,
                   fields: fields,
                   id: id,
@@ -806,10 +883,10 @@ function () {
 
               case 5:
               case "end":
-                return _context15.stop();
+                return _context17.stop();
             }
           }
-        }, _callee15, this);
+        }, _callee17, this);
       }));
 
       function getEntity(_x14, _x15) {
@@ -821,17 +898,19 @@ function () {
   }]);
 
   return Clio;
-}();
+}(); //#endregion
+//#region ClioEntity Class
+
 
 var ClioEntity =
 /*#__PURE__*/
 function () {
-  function ClioEntity(clio, _ref30) {
-    var etag = _ref30.etag,
-        id = _ref30.id,
-        properties = _ref30.properties,
-        fields = _ref30.fields,
-        type = _ref30.type;
+  function ClioEntity(clio, _ref29) {
+    var etag = _ref29.etag,
+        id = _ref29.id,
+        properties = _ref29.properties,
+        fields = _ref29.fields,
+        type = _ref29.type;
 
     _classCallCheck(this, ClioEntity);
 
@@ -848,13 +927,13 @@ function () {
     value: function () {
       var _update3 = _asyncToGenerator(
       /*#__PURE__*/
-      _regeneratorRuntime.mark(function _callee16(changes) {
+      _regeneratorRuntime.mark(function _callee18(changes) {
         var ret;
-        return _regeneratorRuntime.wrap(function _callee16$(_context16) {
+        return _regeneratorRuntime.wrap(function _callee18$(_context18) {
           while (1) {
-            switch (_context16.prev = _context16.next) {
+            switch (_context18.prev = _context18.next) {
               case 0:
-                _context16.next = 2;
+                _context18.next = 2;
                 return this.clio.update({
                   path: this.type,
                   id: this.id,
@@ -862,7 +941,7 @@ function () {
                 });
 
               case 2:
-                ret = _context16.sent;
+                ret = _context18.sent;
                 this.properties = _objectSpread({}, this.properties, {
                   ret: ret
                 });
@@ -870,10 +949,10 @@ function () {
 
               case 5:
               case "end":
-                return _context16.stop();
+                return _context18.stop();
             }
           }
-        }, _callee16, this);
+        }, _callee18, this);
       }));
 
       function update(_x16) {
@@ -887,22 +966,22 @@ function () {
     value: function () {
       var _delete2 = _asyncToGenerator(
       /*#__PURE__*/
-      _regeneratorRuntime.mark(function _callee17() {
-        return _regeneratorRuntime.wrap(function _callee17$(_context17) {
+      _regeneratorRuntime.mark(function _callee19() {
+        return _regeneratorRuntime.wrap(function _callee19$(_context19) {
           while (1) {
-            switch (_context17.prev = _context17.next) {
+            switch (_context19.prev = _context19.next) {
               case 0:
-                return _context17.abrupt("return", this.clio.remove({
+                return _context19.abrupt("return", this.clio.remove({
                   path: this.type,
                   id: this.id
                 }));
 
               case 1:
               case "end":
-                return _context17.stop();
+                return _context19.stop();
             }
           }
-        }, _callee17, this);
+        }, _callee19, this);
       }));
 
       function _delete() {
@@ -914,7 +993,7 @@ function () {
   }]);
 
   return ClioEntity;
-}();
+}(); //#endregion
 
 export { Clio, ClioEntity, _authorize as authorize, _create as create, _get as get, _getAccessToken as getAccessToken, _gets as gets, makeFields, _remove as remove, _update as update };
 //# sourceMappingURL=index.esm.js.map

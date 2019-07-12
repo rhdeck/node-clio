@@ -10,12 +10,18 @@ const authorize = async ({ clientId, clientSecret, code, redirectUri }) => {
     redirect_uri: redirectUri,
     grant_type: "authorization_code"
   });
+  console.log("sending authorize request");
   console.log(body.toString());
   const res = await fetch("https://app.clio.com/oauth/token", {
     method: "post",
     body
   });
-  const { access_token, refresh_token, expires_in } = await res.json();
+  const text = await res.text();
+  console.log("I got text");
+  console.log(text);
+  const obj = JSON.parse(text);
+  console.log("Obj result is ", obj);
+  const { access_token, refresh_token, expires_in } = obj;
   return {
     accessToken: access_token,
     refreshToken: refresh_token,
@@ -29,10 +35,14 @@ const getAccessToken = async ({ clientId, clientSecret, refreshToken }) => {
     refresh_token: refreshToken,
     grant_type: "refresh_token"
   });
+  console.log("sending authorize request wih ");
+  console.log(body);
   const res = await fetch("https://app.clio.com/oauth/token", {
     method: "post",
     body
   });
+  console.log("got res from my request");
+  console.log(res);
   const { access_token, refresh_token, expires_in } = await res.json();
   return {
     accessToken: access_token,
@@ -177,53 +187,70 @@ class Clio {
       code,
       redirectUri
     });
-    this.accessToken = accessToken;
-    this.refreshToken = refreshToken;
-    if (this.onNewRefreshToken) this.onNewRefreshToken(refreshToken);
+    if (accessToken) {
+      this.accessToken = accessToken;
+      this.refreshToken = refreshToken;
+      if (refreshToken && this.onNewRefreshToken)
+        this.onNewRefreshToken(refreshToken);
+      return { accessToken, refreshToken };
+    } else {
+      throw "could not authorize with these credentials";
+    }
+  }
+  async getRefreshToken() {
+    return this.refreshToken();
+  }
+  async _getRefreshToken() {
+    if (this.refreshToken) return this.refreshToken;
+    this.refreshToken = await this.getRefreshToken();
+    return this.refreshToken;
   }
   async getAccessToken() {
-    if (!this.refreshToken)
+    if (this.accessToken) return this.accessToken();
+    const refreshToken = await _getRefreshToken();
+    if (!refreshToken)
       throw "Cannot get an access token without a refresh token";
     const { accessToken, refreshToken: newToken } = await getAccessToken({
       clientId: this.clientId,
       clientSecret: this.clientSecret,
-      refreshToken: this.refreshToken
+      refreshToken
     });
     this.accessToken = accessToken;
     if (newToken) {
       this.refreshToken = newToken;
       if (this.onNewRefreshToken) this.onNewRefreshToken(newToken);
     }
+    return history.accessToken;
   }
   async get({ path, id, fields }) {
-    if (!this.accessToken) await this.getAccessToken();
-    return get({ path, id, fields, accessToken: this.accessToken });
+    const accessToken = await this.getAccessToken();
+    return get({ path, id, fields, accessToken });
   }
   async gets({ path, fields }) {
-    if (!this.accessToken) await this.getAccessToken();
-    return gets({ path, fields, accessToken: this.accessToken });
+    const accessToken = await this.getAccessToken();
+    return gets({ path, fields, accessToken });
   }
   async create({ path, fields, data }) {
-    if (!this.accessToken) await this.getAccessToken();
-    return create({ path, fields, data, accessToken: this.accessToken });
+    const accessToken = await this.getAccessToken();
+    return create({ path, fields, data, accessToken });
   }
   async update({ path, id, fields, etag, data }) {
-    if (!this.accessToken) await this.getAccessToken();
+    const accessToken = await this.getAccessToken();
     return update({
       path,
       id,
       fields,
       data,
       etag,
-      accessToken: this.accessToken
+      accessToken
     });
   }
   async remove({ path, id }) {
-    if (!this.accessToken) await this.getAccessToken();
-    return remove({ path, id, accessToken: this.accessToken });
+    const accessToken = await this.getAccessToken();
+    return remove({ path, id, accessToken });
   }
   async getEntity(type, id, fields = null) {
-    const properties = await get({ path: type, id, fields });
+    const properties = await this.get({ path: type, id, fields });
     return new ClioEntity(this, { properties, fields, id, type });
   }
 }
