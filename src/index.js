@@ -10,23 +10,24 @@ const authorize = async ({ clientId, clientSecret, code, redirectUri }) => {
     redirect_uri: redirectUri,
     grant_type: "authorization_code"
   });
-  console.log("sending authorize request");
-  console.log(body.toString());
   const res = await fetch("https://app.clio.com/oauth/token", {
     method: "post",
     body
   });
   const text = await res.text();
-  console.log("I got text");
-  console.log(text);
-  const obj = JSON.parse(text);
-  console.log("Obj result is ", obj);
-  const { access_token, refresh_token, expires_in } = obj;
-  return {
-    accessToken: access_token,
-    refreshToken: refresh_token,
-    expiresIn: expires_in
-  };
+  try {
+    const obj = JSON.parse(text);
+    const { access_token, refresh_token, expires_in } = obj;
+    return {
+      accessToken: access_token,
+      refreshToken: refresh_token,
+      expiresIn: expires_in
+    };
+  } catch (e) {
+    console.log("Hit error parsing result, probable error message");
+    console.log(text);
+    throw text;
+  }
 };
 const getAccessToken = async ({ clientId, clientSecret, refreshToken }) => {
   const body = new URLSearchParams({
@@ -35,20 +36,23 @@ const getAccessToken = async ({ clientId, clientSecret, refreshToken }) => {
     refresh_token: refreshToken,
     grant_type: "refresh_token"
   });
-  console.log("sending authorize request wih ");
-  console.log(body);
   const res = await fetch("https://app.clio.com/oauth/token", {
     method: "post",
     body
   });
-  console.log("got res from my request");
-  console.log(res);
-  const { access_token, refresh_token, expires_in } = await res.json();
-  return {
-    accessToken: access_token,
-    refreshToken: refresh_token,
-    expiresIn: expires_in
-  };
+  const text = res.text();
+  try {
+    const { access_token, refresh_token, expires_in } = JSON.parse(text);
+    return {
+      accessToken: access_token,
+      refreshToken: refresh_token,
+      expiresIn: expires_in
+    };
+  } catch (e) {
+    console.log("Hit error parsing result, probable error message");
+    console.log(text);
+    throw text;
+  }
 };
 const makeFields = fields => {
   return fields
