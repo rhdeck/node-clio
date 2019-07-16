@@ -1,7 +1,28 @@
 import fetch from "node-fetch";
 import FormData from "form-data";
 import { URLSearchParams } from "url";
+import { createHmac } from "crypto";
+const formDataArray = (formdata, key, arr) => {
+  for (const i in arr) formdata.append(key + "[]", arr[i]);
+};
 //#region Function API
+const baseUrl = "https://app.clio.com/api/v4";
+const getResult = async ret => {
+  try {
+    const text = await ret.text();
+    const obj = JSON.parse(text);
+    if (obj.error) {
+      console.log("hit error in result");
+      console.log(obj.error);
+      throw JSON.stringify(obj.error);
+    }
+    return obj;
+  } catch (e) {
+    console.log("Hit error parsing result, probable error message");
+    console.log(text);
+    throw text;
+  }
+};
 const authorize = async ({ clientId, clientSecret, code, redirectUri }) => {
   const body = new URLSearchParams({
     client_id: clientId,
@@ -29,6 +50,14 @@ const authorize = async ({ clientId, clientSecret, code, redirectUri }) => {
     throw text;
   }
 };
+const deauthorize = async ({ accessToken }) => {
+  const headers = {
+    Authorization: `Bearer ${accessToken}`
+  };
+  const url = new URL("https://app.clio.com/oauth/deauthorize");
+  await fetch(url, { headers });
+  return true;
+};
 const getAccessToken = async ({ clientId, clientSecret, refreshToken }) => {
   const body = new URLSearchParams({
     client_id: clientId,
@@ -40,7 +69,7 @@ const getAccessToken = async ({ clientId, clientSecret, refreshToken }) => {
     method: "post",
     body
   });
-  const text = res.text();
+  const text = await res.text();
   try {
     const { access_token, refresh_token, expires_in } = JSON.parse(text);
     return {
@@ -70,11 +99,27 @@ const gets = async ({ path, fields, accessToken, ...args }) => {
   const headers = {
     Authorization: `Bearer ${accessToken}`
   };
-  const url = new URL("https://app.clio.com/api/v4");
+  const url = new URL(baseUrl);
   url.pathname = `${url.pathname}/${path}.json`;
   url.searchParams.append("fields", makeFields(fields));
   Object.entries(args).forEach(([k, v]) => url.searchParams.append(k, v));
   const ret = await fetch(url, { method: "get", headers });
+  return getResult(ret);
+};
+const makeWebHook = async ({ url, fields, events, model, expires }) => {
+  const headers = {
+    Authorization: `Bearer ${accessToken}`
+  };
+  const whUrl = new URL("https://app.clio.com/api/v4/webhook.json");
+  const formData = new FormData();
+  if (!url) throw "url is required";
+  formData.append("url", url);
+  if (events) formDataArray(formData, "events", events);
+  if (fields) formData.append("fields", makeFields(fields));
+  formData.append("model", model);
+  if (!(expires instanceof Date)) expires = new Date(expires);
+  if (expires) formData.append("expires_at", expires.toISOString());
+  const ret = await fetch(whUrl, { method: "post", headers, body });
   try {
     const text = await ret.text();
     const obj = JSON.parse(text);
@@ -85,84 +130,79 @@ const gets = async ({ path, fields, accessToken, ...args }) => {
     throw text;
   }
 };
-const create = async ({ path, fields, data, accessToken }) => {
+const validateSignature = ({ signature, secret, body }) => {
+  const cipher = createHmac("sha256", secret);
+  cipher.update(body);
+  const calculatedSignature = cipher.digest("hex");
+  console.log("Received signature", signature);
+  console.log("Body");
+  console.log(body);
+  console.log("Calculated signature", calculatedSignature);
+  return signature !== calculatedSignature;
+};
+const create = async ({
+  path,
+  fields,
+  data,
+  body: tempBody,
+  accessToken,
+  ...args
+}) => {
+  const url = new URL(baseUrl);
   const headers = {
-    Authorization: `Bearer ${accessToken}`
+    Authorization: `Bearer ${accessToken}`,
+    "Content-Type": "application/json"
   };
-  const url = new URL("https://app.clio.com/api/v4");
-  const body = new FormData();
-  body.append("data", data);
   url.pathname = `${url.pathname}/${path}.json`;
   url.searchParams.append("fields", makeFields(fields));
+  Object.entries(args).forEach(([k, v]) => url.searchParams.append(k, v));
+  const body = JSON.stringify({ data, ...(tempBody || {}) });
   const ret = await fetch(url, { method: "post", headers, body });
-  try {
-    const text = await ret.text();
-    const obj = JSON.parse(text);
-    return obj;
-  } catch (e) {
-    console.log("Hit error parsing result, probable error message");
-    console.log(text);
-    throw text;
-  }
+  return getResult(ret);
 };
-const get = async ({ path, id, fields, accessToken }) => {
+const get = async ({ path, id, fields, accessToken, ...args }) => {
   const headers = {
     Authorization: `Bearer ${accessToken}`
   };
-  const url = new URL("https://app.clio.com/api/v4");
+  const url = new URL(baseUrl);
   url.pathname = `${url.pathname}/${path}/${id}.json`;
   url.searchParams.append("fields", makeFields(fields));
+  Object.entries(args).forEach(([k, v]) => url.searchParams.append(k, v));
   const ret = await fetch(url, { method: "get", headers });
-  try {
-    const text = await ret.text();
-    const obj = JSON.parse(text);
-    return obj;
-  } catch (e) {
-    console.log("Hit error parsing result, probable error message");
-    console.log(text);
-    throw text;
-  }
+  return getResult(ret);
 };
-const update = async ({ etag, path, id, fields, data, accessToken }) => {
+const update = async ({
+  etag,
+  path,
+  id,
+  fields,
+  data,
+  accessToken,
+  ...args
+}) => {
   if (!etag) etag = data.etag;
-  const body = new FormData();
-  Object.entries(data).map(([k, v]) => body.append(k, v));
   const headers = {
     Authorization: `Bearer ${accessToken}`,
     "IF-MATCH": etag,
-    ...body.getHeaders()
+    "Content-Type": "application/json"
   };
-  const url = new URL("https://app.clio.com/api/v4");
+  const url = new URL(baseUrl);
   url.pathname = `${url.pathname}/${path}/${id}.json`;
   url.searchParams.append("fields", makeFields(fields));
+  Object.entries(args).forEach(([k, v]) => url.searchParams.append(k, v));
+  const body = JSON.stringify({ data });
   const ret = await fetch(url, { method: "patch", body, headers });
-
-  try {
-    const text = await ret.text();
-    const obj = JSON.parse(text);
-    return obj;
-  } catch (e) {
-    console.log("Hit error parsing result, probable error message");
-    console.log(text);
-    throw text;
-  }
+  return getResult(ret);
 };
-const remove = async ({ path, id, accessToken }) => {
+const remove = async ({ path, id, accessToken, ...args }) => {
   const headers = {
     Authorization: `Bearer ${accessToken}`
   };
-  const url = new URL("https://app.clio.com/api/v4");
+  const url = new URL(baseUrl);
   url.pathname = `${url.pathname}/${path}/${id}.json`;
+  Object.entries(args).forEach(([k, v]) => url.searchParams.append(k, v));
   const ret = await fetch(url, { method: "delete", headers });
-  try {
-    const text = await ret.text();
-    const obj = JSON.parse(text);
-    return obj;
-  } catch (e) {
-    console.log("Hit error parsing result, probable error message");
-    console.log(text);
-    throw text;
-  }
+  return getResult(ret);
 };
 //#endregion
 //#region Clio class
@@ -174,13 +214,16 @@ class Clio {
     accessToken,
     onNewRefreshToken
   }) {
-    if (!clientId || !clientSecret)
-      throw "Clio must be initialized with a clientId and a clientSecret";
+    // if (!clientId || !clientSecret)
+    //   throw "Clio must be initialized with a clientId and a clientSecret";
     this.clientId = clientId;
     this.clientSecret = clientSecret;
     this.refreshToken = refreshToken;
     this.accessToken = accessToken;
     this.onNewRefreshToken = onNewRefreshToken;
+  }
+  async load() {
+    return this;
   }
   async authorize({ code, redirectUri }) {
     if (!code || !redirectUri)
@@ -201,8 +244,13 @@ class Clio {
       throw "could not authorize with these credentials";
     }
   }
+  async deauthorize() {
+    const accessToken = await this.getAccessToken();
+    await deauthorize({ accessToken });
+    this.onNewRefreshToken(null);
+  }
   async getRefreshToken() {
-    return this.refreshToken();
+    return this.refreshToken;
   }
   async _getRefreshToken() {
     if (this.refreshToken) return this.refreshToken;
@@ -210,8 +258,8 @@ class Clio {
     return this.refreshToken;
   }
   async getAccessToken() {
-    if (this.accessToken) return this.accessToken();
-    const refreshToken = await _getRefreshToken();
+    if (this.accessToken) return this.accessToken;
+    const refreshToken = await this._getRefreshToken();
     if (!refreshToken)
       throw "Cannot get an access token without a refresh token";
     const { accessToken, refreshToken: newToken } = await getAccessToken({
@@ -224,7 +272,7 @@ class Clio {
       this.refreshToken = newToken;
       if (this.onNewRefreshToken) this.onNewRefreshToken(newToken);
     }
-    return history.accessToken;
+    return this.accessToken;
   }
   async get({ path, id, fields }) {
     const accessToken = await this.getAccessToken();
@@ -256,6 +304,146 @@ class Clio {
   async getEntity(type, id, fields = null) {
     const properties = await this.get({ path: type, id, fields });
     return new ClioEntity(this, { properties, fields, id, type });
+  }
+  async withAccessToken(request) {
+    const accessToken = await this.getAccessToken();
+    const headers = {
+      Authorization: `Bearer ${accessToken}`
+    };
+    request.headers = request.headers
+      ? { ...request.headers, ...headers }
+      : (request.header = headers);
+    return request;
+  }
+  async getPage({ url, path, fields }) {
+    const promise = url ? getUrl({ url }) : gets({ path, fields });
+    const {
+      meta: { paging: { next, previous } = {} } = {},
+      data
+    } = await promise;
+    return {
+      page: data,
+      getNext: next && (() => this.getPage({ url: next, path, fields })),
+      getPrevious:
+        previous && (() => this.getPage({ url: previous, path, fields }))
+    };
+  }
+  async map({ page, fields }, f) {
+    getNextPage = await getPage({ path, fields });
+    while (getNextPage) {
+      const { page, getNext } = getNextPage();
+      await Promise.all(page.map(f));
+      getNextPage = getNext;
+    }
+  }
+  async mapEntities({ path, fields }, f) {
+    getNextPage = await getPageEntities({ path, fields });
+    while (getNextPage) {
+      const { page, getNext } = getNextPage();
+      await Promise.all(page.map(f));
+      getNextPage = getNext;
+    }
+  }
+  async mapEntities2({ path, fields }, f) {
+    return this.map(
+      properties =>
+        new ClioEntity(this, {
+          fields,
+          type: path
+        })
+    );
+  }
+  async getPageEntities({ url, path, fields }) {
+    const { page, getNext, getPrevious } = await this.getPage({
+      url,
+      path,
+      fields
+    });
+    return this.withEntities({ page, getNext, getPrevious, path, fields });
+  }
+  async withEntities({ page, getNext, getPrevious, path, fields }) {
+    //convert page elements to entities
+    const entities = page.map(properties => {
+      const entity = new ClioEntity(this, {
+        fields,
+        properties,
+        type: path
+      });
+      return entity;
+    });
+    return {
+      page: entities,
+      raw: page,
+      getNext:
+        getNext &&
+        (async () => {
+          const { page, getNext, getPrevious } = await getNext();
+          return this.withEntities({
+            page,
+            getNext,
+            getPrevious,
+            path,
+            fields
+          });
+        }),
+      getPrevious:
+        getPrevious &&
+        (async () => {
+          const { page, getNext, getPrevious } = await getPrevious();
+          return this.withEntities({
+            page,
+            getNext,
+            getPrevious,
+            path,
+            fields
+          });
+        })
+    };
+  }
+
+  async getUrl({ url, request }) {
+    if (!request) request = {};
+    const res = await fetch(url, this.withAccessToken(request));
+    return getResult(res);
+  }
+  async makeCustomAction({ label, targetUrl, uiReference, type }) {
+    if (type) uiReference = `${type}/show`;
+    const {
+      data: {
+        id,
+        etag,
+        created_at,
+        updated_at,
+        label: newLabel,
+        target_url,
+        ui_reference
+      }
+    } = await this.create({
+      path: "custom_actions",
+      fields: [
+        "label",
+        "target_url",
+        "ui_reference",
+        "id",
+        "etag",
+        "created_at",
+        "updated_at"
+      ],
+      data: {
+        label,
+        target_url: targetUrl,
+        ui_reference: uiReference
+      }
+    });
+    return {
+      id,
+      etag,
+      createdAt: created_at,
+      updatedAt: updated_at,
+      label: newLabel,
+      targetUrl: target_url,
+      uiReference: ui_reference
+    };
   }
 }
 //#endregion
@@ -293,5 +481,8 @@ export {
   update,
   authorize,
   remove,
-  makeFields
+  makeFields,
+  deauthorize,
+  makeWebHook,
+  validateSignature
 };
