@@ -106,7 +106,14 @@ const gets = async ({ path, fields, accessToken, ...args }) => {
   const ret = await fetch(url, { method: "get", headers });
   return getResult(ret);
 };
-const makeWebHook = async ({ url, fields, events, model, expires }) => {
+const makeWebHook = async ({
+  url,
+  fields,
+  events,
+  model,
+  expires,
+  accessToken
+}) => {
   const headers = {
     Authorization: `Bearer ${accessToken}`
   };
@@ -444,6 +451,17 @@ class Clio {
       targetUrl: target_url,
       uiReference: ui_reference
     };
+  }
+  async makeWebHook({ url, fields, events, model, expires }) {
+    const accessToken = await this.getAccessToken();
+    return await makeWebHook({
+      url,
+      fields,
+      events,
+      model,
+      expires,
+      accessToken
+    });
   }
 }
 //#endregion
