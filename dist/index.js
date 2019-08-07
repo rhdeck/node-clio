@@ -14429,22 +14429,31 @@
                   accessToken = _ref33.accessToken;
 
                   if (!accessToken) {
-                    _context12.next = 15;
+                    _context12.next = 17;
                     break;
                   }
 
                   this.accessToken = accessToken;
                   this.refreshToken = refreshToken;
-                  if (refreshToken && this.onNewRefreshToken) this.onNewRefreshToken(refreshToken);
+
+                  if (!(refreshToken && this.onNewRefreshToken)) {
+                    _context12.next = 14;
+                    break;
+                  }
+
+                  _context12.next = 14;
+                  return this.onNewRefreshToken(refreshToken);
+
+                case 14:
                   return _context12.abrupt("return", {
                     accessToken: accessToken,
                     refreshToken: refreshToken
                   });
 
-                case 15:
+                case 17:
                   throw "could not authorize with these credentials";
 
-                case 16:
+                case 18:
                 case "end":
                   return _context12.stop();
               }
