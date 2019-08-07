@@ -256,7 +256,7 @@ class Clio {
       this.accessToken = accessToken;
       this.refreshToken = refreshToken;
       if (refreshToken && this.onNewRefreshToken)
-        this.onNewRefreshToken(refreshToken);
+        await this.onNewRefreshToken(refreshToken);
       return { accessToken, refreshToken };
     } else {
       throw "could not authorize with these credentials";
