@@ -714,7 +714,7 @@ function () {
                 });
 
               case 5:
-                this.onNewRefreshToken(null);
+                return _context13.abrupt("return", this.onNewRefreshToken(null));
 
               case 6:
               case "end":
