@@ -12,13 +12,13 @@ const getResult = async ret => {
   try {
     const obj = JSON.parse(text);
     if (obj.error) {
-      console.log("hit error in result");
-      console.log(obj.error);
       throw JSON.stringify(obj.error);
     }
     return obj;
   } catch (e) {
-    console.log("Hit error parsing result, probable error message");
+    console.log(
+      "Hit error parsing result in getResult, probable error message"
+    );
     console.log(text);
     throw text;
   }
@@ -45,7 +45,9 @@ const authorize = async ({ clientId, clientSecret, code, redirectUri }) => {
       expiresIn: expires_in
     };
   } catch (e) {
-    console.log("Hit error parsing result, probable error message");
+    console.log(
+      "Hit error parsing result in authorize, probable error message"
+    );
     console.log(text);
     throw text;
   }
@@ -120,22 +122,28 @@ const makeWebHook = async ({
   const headers = {
     Authorization: `Bearer ${accessToken}`
   };
-  const whUrl = new URL("https://app.clio.com/api/v4/webhook.json");
-  const formData = new FormData();
+  const whUrl = new URL("https://app.clio.com/api/v4/webhooks.json");
+  const body = { model };
   if (!url) throw "url is required";
-  formData.append("url", url);
-  if (events) formDataArray(formData, "events", events);
-  if (fields) formData.append("fields", makeFields(fields));
-  formData.append("model", model);
-  if (!(expires instanceof Date)) expires = new Date(expires);
-  if (expires) formData.append("expires_at", expires.toISOString());
-  const ret = await fetch(whUrl, { method: "post", headers, body });
+  body.url = url;
+  if (events) body.events = events;
+  if (fields) body.fields = makeFields(fields);
+  if (expires && !(expires instanceof Date)) expires = new Date(expires);
+  if (expires) body.expires_at = expires.toISOString();
+
+  const ret = await fetch(whUrl, {
+    method: "post",
+    headers,
+    body: JSON.stringify(body)
+  });
+  const text = await ret.text();
   try {
-    const text = await ret.text();
     const obj = JSON.parse(text);
     return obj;
   } catch (e) {
-    console.log("Hit error parsing result, probable error message");
+    console.log(
+      "Hit error parsing result in makewebhook, probable error message"
+    );
     console.log(text);
     throw text;
   }
@@ -230,7 +238,7 @@ class Clio {
     this.clientSecret = clientSecret;
     this.refreshToken = refreshToken;
     this.accessToken = accessToken;
-    this.onNewRefreshToken = onNewRefreshToken;
+    if (onNewRefreshToken) this.onNewRefreshToken = onNewRefreshToken;
   }
   async load() {
     return this;
