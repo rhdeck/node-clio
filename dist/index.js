@@ -13313,13 +13313,6 @@
 
   var parseUrl = Url__default.parse;
 
-
-
-
-
-  // Public API
-  var form_data = FormData;
-
   // make it a Stream
   util.inherits(FormData, combined_stream);
 
@@ -13792,12 +13785,6 @@
 
   function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { if (i % 2) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { defineProperty(target, key, source[key]); }); } else { Object.defineProperties(target, Object.getOwnPropertyDescriptors(arguments[i])); } } return target; }
 
-  var formDataArray = function formDataArray(formdata, key, arr) {
-    for (var i in arr) {
-      formdata.append(key + "[]", arr[i]);
-    }
-  }; //#region Function API
-
 
   var baseUrl = "https://app.clio.com/api/v4";
 
@@ -13821,30 +13808,28 @@
               obj = JSON.parse(text);
 
               if (!obj.error) {
-                _context.next = 9;
+                _context.next = 7;
                 break;
               }
 
-              console.log("hit error in result");
-              console.log(obj.error);
               throw JSON.stringify(obj.error);
 
-            case 9:
+            case 7:
               return _context.abrupt("return", obj);
 
-            case 12:
-              _context.prev = 12;
+            case 10:
+              _context.prev = 10;
               _context.t0 = _context["catch"](3);
-              console.log("Hit error parsing result, probable error message");
+              console.log("Hit error parsing result in getResult, probable error message");
               console.log(text);
               throw text;
 
-            case 17:
+            case 15:
             case "end":
               return _context.stop();
           }
         }
-      }, _callee, null, [[3, 12]]);
+      }, _callee, null, [[3, 10]]);
     }));
 
     return function getResult(_x) {
@@ -13896,7 +13881,7 @@
             case 14:
               _context2.prev = 14;
               _context2.t0 = _context2["catch"](8);
-              console.log("Hit error parsing result, probable error message");
+              console.log("Hit error parsing result in authorize, probable error message");
               console.log(text);
               throw text;
 
@@ -14077,8 +14062,7 @@
     var _ref13 = asyncToGenerator(
     /*#__PURE__*/
     regenerator.mark(function _callee6(_ref12) {
-      var url, fields, events, model, expires, accessToken, headers, whUrl, formData, ret, _text, obj;
-
+      var url, fields, events, model, expires, accessToken, headers, whUrl, body, ret, text, obj;
       return regenerator.wrap(function _callee6$(_context6) {
         while (1) {
           switch (_context6.prev = _context6.next) {
@@ -14087,8 +14071,10 @@
               headers = {
                 Authorization: "Bearer ".concat(accessToken)
               };
-              whUrl = new URL("https://app.clio.com/api/v4/webhook.json");
-              formData = new form_data();
+              whUrl = new URL("https://app.clio.com/api/v4/webhooks.json");
+              body = {
+                model: model
+              };
 
               if (url) {
                 _context6.next = 6;
@@ -14098,43 +14084,42 @@
               throw "url is required";
 
             case 6:
-              formData.append("url", url);
-              if (events) formDataArray(formData, "events", events);
-              if (fields) formData.append("fields", makeFields(fields));
-              formData.append("model", model);
-              if (!(expires instanceof Date)) expires = new Date(expires);
-              if (expires) formData.append("expires_at", expires.toISOString());
-              _context6.next = 14;
+              body.url = url;
+              if (events) body.events = events;
+              if (fields) body.fields = makeFields(fields);
+              if (expires && !(expires instanceof Date)) expires = new Date(expires);
+              if (expires) body.expires_at = expires.toISOString();
+              _context6.next = 13;
               return fetch(whUrl, {
                 method: "post",
                 headers: headers,
-                body: body
+                body: JSON.stringify(body)
               });
 
-            case 14:
+            case 13:
               ret = _context6.sent;
-              _context6.prev = 15;
-              _context6.next = 18;
+              _context6.next = 16;
               return ret.text();
 
-            case 18:
-              _text = _context6.sent;
-              obj = JSON.parse(_text);
+            case 16:
+              text = _context6.sent;
+              _context6.prev = 17;
+              obj = JSON.parse(text);
               return _context6.abrupt("return", obj);
 
-            case 23:
-              _context6.prev = 23;
-              _context6.t0 = _context6["catch"](15);
-              console.log("Hit error parsing result, probable error message");
+            case 22:
+              _context6.prev = 22;
+              _context6.t0 = _context6["catch"](17);
+              console.log("Hit error parsing result in makewebhook, probable error message");
               console.log(text);
               throw text;
 
-            case 28:
+            case 27:
             case "end":
               return _context6.stop();
           }
         }
-      }, _callee6, null, [[15, 23]]);
+      }, _callee6, null, [[17, 22]]);
     }));
 
     return function makeWebHook(_x6) {
@@ -14379,7 +14364,7 @@
       this.clientSecret = clientSecret;
       this.refreshToken = refreshToken;
       this.accessToken = accessToken;
-      this.onNewRefreshToken = onNewRefreshToken;
+      if (onNewRefreshToken) this.onNewRefreshToken = onNewRefreshToken;
     }
 
     createClass(Clio, [{
