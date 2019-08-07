@@ -10,6 +10,7 @@ import fetch from 'node-fetch';
 import FormData from 'form-data';
 import { URLSearchParams } from 'url';
 import { createHmac } from 'crypto';
+import 'rxjs/internal/observable/ConnectableObservable';
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { if (i % 2) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } else { Object.defineProperties(target, Object.getOwnPropertyDescriptors(arguments[i])); } } return target; }
 
@@ -28,19 +29,18 @@ function () {
   var _ref = _asyncToGenerator(
   /*#__PURE__*/
   _regeneratorRuntime.mark(function _callee(ret) {
-    var _text, obj;
-
+    var text, obj;
     return _regeneratorRuntime.wrap(function _callee$(_context) {
       while (1) {
         switch (_context.prev = _context.next) {
           case 0:
-            _context.prev = 0;
-            _context.next = 3;
+            _context.next = 2;
             return ret.text();
 
-          case 3:
-            _text = _context.sent;
-            obj = JSON.parse(_text);
+          case 2:
+            text = _context.sent;
+            _context.prev = 3;
+            obj = JSON.parse(text);
 
             if (!obj.error) {
               _context.next = 9;
@@ -56,7 +56,7 @@ function () {
 
           case 12:
             _context.prev = 12;
-            _context.t0 = _context["catch"](0);
+            _context.t0 = _context["catch"](3);
             console.log("Hit error parsing result, probable error message");
             console.log(text);
             throw text;
@@ -66,7 +66,7 @@ function () {
             return _context.stop();
         }
       }
-    }, _callee, null, [[0, 12]]);
+    }, _callee, null, [[3, 12]]);
   }));
 
   return function getResult(_x) {
@@ -233,7 +233,7 @@ function () {
 }();
 
 var makeFields = function makeFields(fields) {
-  return fields.map(function (field) {
+  return fields && fields.map(function (field) {
     if (typeof field === "string") return field;
 
     if (_typeof(field) === "object") {
@@ -293,19 +293,19 @@ function () {
   };
 }();
 
-var makeWebHook =
+var _makeWebHook =
 /*#__PURE__*/
 function () {
   var _ref13 = _asyncToGenerator(
   /*#__PURE__*/
   _regeneratorRuntime.mark(function _callee6(_ref12) {
-    var url, fields, events, model, expires, headers, whUrl, formData, ret, _text2, obj;
+    var url, fields, events, model, expires, accessToken, headers, whUrl, formData, ret, _text, obj;
 
     return _regeneratorRuntime.wrap(function _callee6$(_context6) {
       while (1) {
         switch (_context6.prev = _context6.next) {
           case 0:
-            url = _ref12.url, fields = _ref12.fields, events = _ref12.events, model = _ref12.model, expires = _ref12.expires;
+            url = _ref12.url, fields = _ref12.fields, events = _ref12.events, model = _ref12.model, expires = _ref12.expires, accessToken = _ref12.accessToken;
             headers = {
               Authorization: "Bearer ".concat(accessToken)
             };
@@ -340,8 +340,8 @@ function () {
             return ret.text();
 
           case 18:
-            _text2 = _context6.sent;
-            obj = JSON.parse(_text2);
+            _text = _context6.sent;
+            obj = JSON.parse(_text);
             return _context6.abrupt("return", obj);
 
           case 23:
@@ -396,7 +396,7 @@ function () {
               "Content-Type": "application/json"
             };
             url.pathname = "".concat(url.pathname, "/").concat(path, ".json");
-            url.searchParams.append("fields", makeFields(fields));
+            if (fields) url.searchParams.append("fields", makeFields(fields));
             Object.entries(args).forEach(function (_ref17) {
               var _ref18 = _slicedToArray(_ref17, 2),
                   k = _ref18[0],
@@ -1119,7 +1119,7 @@ function () {
                 headers = {
                   Authorization: "Bearer ".concat(accessToken)
                 };
-                request.headers = request.headers ? _objectSpread({}, request.headers, {}, headers) : request.header = headers;
+                request.headers = request.headers ? _objectSpread({}, request.headers, {}, headers) : headers;
                 return _context23.abrupt("return", request);
 
               case 6:
@@ -1144,19 +1144,19 @@ function () {
       _regeneratorRuntime.mark(function _callee24(_ref40) {
         var _this = this;
 
-        var url, path, fields, promise, _ref41, _ref41$meta, _ref41$meta$paging, next, previous, data;
+        var url, path, fields, args, promise, _ref41, _ref41$meta, _ref41$meta$paging, next, previous, data;
 
         return _regeneratorRuntime.wrap(function _callee24$(_context24) {
           while (1) {
             switch (_context24.prev = _context24.next) {
               case 0:
-                url = _ref40.url, path = _ref40.path, fields = _ref40.fields;
-                promise = url ? getUrl({
+                url = _ref40.url, path = _ref40.path, fields = _ref40.fields, args = _objectWithoutProperties(_ref40, ["url", "path", "fields"]);
+                promise = url ? this.getUrl({
                   url: url
-                }) : _gets({
+                }) : this.gets(_objectSpread({
                   path: path,
                   fields: fields
-                });
+                }, args));
                 _context24.next = 4;
                 return promise;
 
@@ -1190,7 +1190,7 @@ function () {
                 return _context24.stop();
             }
           }
-        }, _callee24);
+        }, _callee24, this);
       }));
 
       function getPage(_x20) {
@@ -1205,43 +1205,59 @@ function () {
       var _map = _asyncToGenerator(
       /*#__PURE__*/
       _regeneratorRuntime.mark(function _callee25(_ref42, f) {
-        var page, fields, _getNextPage, _page, getNext;
+        var path, fields, args, obj, _obj, page, getNext;
 
         return _regeneratorRuntime.wrap(function _callee25$(_context25) {
           while (1) {
             switch (_context25.prev = _context25.next) {
               case 0:
-                page = _ref42.page, fields = _ref42.fields;
+                path = _ref42.path, fields = _ref42.fields, args = _objectWithoutProperties(_ref42, ["path", "fields"]);
                 _context25.next = 3;
-                return getPage({
+                return this.getPage(_objectSpread({
                   path: path,
                   fields: fields
-                });
+                }, args));
 
               case 3:
-                getNextPage = _context25.sent;
+                obj = _context25.sent;
 
               case 4:
-                if (!getNextPage) {
-                  _context25.next = 11;
+                if (!obj) {
+                  _context25.next = 17;
                   break;
                 }
 
-                _getNextPage = getNextPage(), _page = _getNextPage.page, getNext = _getNextPage.getNext;
+                _obj = obj, page = _obj.page, getNext = _obj.getNext;
                 _context25.next = 8;
-                return Promise.all(_page.map(f));
+                return Promise.all(page.map(f));
 
               case 8:
-                getNextPage = getNext;
+                if (!getNext) {
+                  _context25.next = 14;
+                  break;
+                }
+
+                _context25.next = 11;
+                return getNext();
+
+              case 11:
+                obj = _context25.sent;
+                _context25.next = 15;
+                break;
+
+              case 14:
+                obj = null;
+
+              case 15:
                 _context25.next = 4;
                 break;
 
-              case 11:
+              case 17:
               case "end":
                 return _context25.stop();
             }
           }
-        }, _callee25);
+        }, _callee25, this);
       }));
 
       function map(_x21, _x22) {
@@ -1256,7 +1272,7 @@ function () {
       var _mapEntities = _asyncToGenerator(
       /*#__PURE__*/
       _regeneratorRuntime.mark(function _callee26(_ref43, f) {
-        var path, fields, _getNextPage2, page, getNext;
+        var path, fields, _getNextPage, page, getNext;
 
         return _regeneratorRuntime.wrap(function _callee26$(_context26) {
           while (1) {
@@ -1278,7 +1294,7 @@ function () {
                   break;
                 }
 
-                _getNextPage2 = getNextPage(), page = _getNextPage2.page, getNext = _getNextPage2.getNext;
+                _getNextPage = getNextPage(), page = _getNextPage.page, getNext = _getNextPage.getNext;
                 _context26.next = 8;
                 return Promise.all(page.map(f));
 
@@ -1309,17 +1325,22 @@ function () {
       _regeneratorRuntime.mark(function _callee27(_ref44, f) {
         var _this2 = this;
 
-        var path, fields;
+        var path, fields, args;
         return _regeneratorRuntime.wrap(function _callee27$(_context27) {
           while (1) {
             switch (_context27.prev = _context27.next) {
               case 0:
-                path = _ref44.path, fields = _ref44.fields;
-                return _context27.abrupt("return", this.map(function (properties) {
-                  return new ClioEntity(_this2, {
+                path = _ref44.path, fields = _ref44.fields, args = _objectWithoutProperties(_ref44, ["path", "fields"]);
+                return _context27.abrupt("return", this.map(_objectSpread({
+                  fields: fields,
+                  path: path
+                }, args), function (properties) {
+                  var entity = new ClioEntity(_this2, {
                     fields: fields,
-                    type: path
+                    type: path,
+                    properties: properties
                   });
+                  return f(entity);
                 }));
 
               case 2:
@@ -1507,13 +1528,18 @@ function () {
                 url = _ref52.url, request = _ref52.request;
                 if (!request) request = {};
                 _context32.next = 4;
-                return fetch(url, this.withAccessToken(request));
+                return this.withAccessToken(request);
 
               case 4:
+                request = _context32.sent;
+                _context32.next = 7;
+                return fetch(url, request);
+
+              case 7:
                 res = _context32.sent;
                 return _context32.abrupt("return", getResult(res));
 
-              case 6:
+              case 9:
               case "end":
                 return _context32.stop();
             }
@@ -1586,6 +1612,50 @@ function () {
 
       return makeCustomAction;
     }()
+  }, {
+    key: "makeWebHook",
+    value: function () {
+      var _makeWebHook2 = _asyncToGenerator(
+      /*#__PURE__*/
+      _regeneratorRuntime.mark(function _callee34(_ref55) {
+        var url, fields, events, model, expires, accessToken;
+        return _regeneratorRuntime.wrap(function _callee34$(_context34) {
+          while (1) {
+            switch (_context34.prev = _context34.next) {
+              case 0:
+                url = _ref55.url, fields = _ref55.fields, events = _ref55.events, model = _ref55.model, expires = _ref55.expires;
+                _context34.next = 3;
+                return this.getAccessToken();
+
+              case 3:
+                accessToken = _context34.sent;
+                _context34.next = 6;
+                return _makeWebHook({
+                  url: url,
+                  fields: fields,
+                  events: events,
+                  model: model,
+                  expires: expires,
+                  accessToken: accessToken
+                });
+
+              case 6:
+                return _context34.abrupt("return", _context34.sent);
+
+              case 7:
+              case "end":
+                return _context34.stop();
+            }
+          }
+        }, _callee34, this);
+      }));
+
+      function makeWebHook(_x31) {
+        return _makeWebHook2.apply(this, arguments);
+      }
+
+      return makeWebHook;
+    }()
   }]);
 
   return Clio;
@@ -1596,12 +1666,12 @@ function () {
 var ClioEntity =
 /*#__PURE__*/
 function () {
-  function ClioEntity(clio, _ref55) {
-    var etag = _ref55.etag,
-        id = _ref55.id,
-        properties = _ref55.properties,
-        fields = _ref55.fields,
-        type = _ref55.type;
+  function ClioEntity(clio, _ref56) {
+    var etag = _ref56.etag,
+        id = _ref56.id,
+        properties = _ref56.properties,
+        fields = _ref56.fields,
+        type = _ref56.type;
 
     _classCallCheck(this, ClioEntity);
 
@@ -1618,13 +1688,13 @@ function () {
     value: function () {
       var _update3 = _asyncToGenerator(
       /*#__PURE__*/
-      _regeneratorRuntime.mark(function _callee34(changes) {
+      _regeneratorRuntime.mark(function _callee35(changes) {
         var ret;
-        return _regeneratorRuntime.wrap(function _callee34$(_context34) {
+        return _regeneratorRuntime.wrap(function _callee35$(_context35) {
           while (1) {
-            switch (_context34.prev = _context34.next) {
+            switch (_context35.prev = _context35.next) {
               case 0:
-                _context34.next = 2;
+                _context35.next = 2;
                 return this.clio.update({
                   path: this.type,
                   id: this.id,
@@ -1632,7 +1702,7 @@ function () {
                 });
 
               case 2:
-                ret = _context34.sent;
+                ret = _context35.sent;
                 this.properties = _objectSpread({}, this.properties, {
                   ret: ret
                 });
@@ -1640,13 +1710,13 @@ function () {
 
               case 5:
               case "end":
-                return _context34.stop();
+                return _context35.stop();
             }
           }
-        }, _callee34, this);
+        }, _callee35, this);
       }));
 
-      function update(_x31) {
+      function update(_x32) {
         return _update3.apply(this, arguments);
       }
 
@@ -1657,22 +1727,22 @@ function () {
     value: function () {
       var _delete2 = _asyncToGenerator(
       /*#__PURE__*/
-      _regeneratorRuntime.mark(function _callee35() {
-        return _regeneratorRuntime.wrap(function _callee35$(_context35) {
+      _regeneratorRuntime.mark(function _callee36() {
+        return _regeneratorRuntime.wrap(function _callee36$(_context36) {
           while (1) {
-            switch (_context35.prev = _context35.next) {
+            switch (_context36.prev = _context36.next) {
               case 0:
-                return _context35.abrupt("return", this.clio.remove({
+                return _context36.abrupt("return", this.clio.remove({
                   path: this.type,
                   id: this.id
                 }));
 
               case 1:
               case "end":
-                return _context35.stop();
+                return _context36.stop();
             }
           }
-        }, _callee35, this);
+        }, _callee36, this);
       }));
 
       function _delete() {
@@ -1686,5 +1756,5 @@ function () {
   return ClioEntity;
 }(); //#endregion
 
-export { Clio, ClioEntity, _authorize as authorize, _create as create, _deauthorize as deauthorize, _get as get, _getAccessToken as getAccessToken, _gets as gets, makeFields, makeWebHook, _remove as remove, _update as update, validateSignature };
+export { Clio, ClioEntity, _authorize as authorize, _create as create, _deauthorize as deauthorize, _get as get, _getAccessToken as getAccessToken, _gets as gets, makeFields, _makeWebHook as makeWebHook, _remove as remove, _update as update, validateSignature };
 //# sourceMappingURL=index.esm.js.map
