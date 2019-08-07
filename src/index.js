@@ -265,7 +265,7 @@ class Clio {
   async deauthorize() {
     const accessToken = await this.getAccessToken();
     await deauthorize({ accessToken });
-    this.onNewRefreshToken(null);
+    return this.onNewRefreshToken(null);
   }
   async getRefreshToken() {
     return this.refreshToken;
