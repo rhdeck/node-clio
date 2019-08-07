@@ -8,8 +8,8 @@ const formDataArray = (formdata, key, arr) => {
 //#region Function API
 const baseUrl = "https://app.clio.com/api/v4";
 const getResult = async ret => {
+  const text = await ret.text();
   try {
-    const text = await ret.text();
     const obj = JSON.parse(text);
     if (obj.error) {
       console.log("hit error in result");
@@ -84,16 +84,19 @@ const getAccessToken = async ({ clientId, clientSecret, refreshToken }) => {
   }
 };
 const makeFields = fields => {
-  return fields
-    .map(field => {
-      if (typeof field === "string") return field;
-      if (typeof field === "object") {
-        const { field: fieldName, fields } = field;
-        const fieldString = makeFields(fields);
-        return `${fieldName}{${fields}}`;
-      }
-    })
-    .join(",");
+  return (
+    fields &&
+    fields
+      .map(field => {
+        if (typeof field === "string") return field;
+        if (typeof field === "object") {
+          const { field: fieldName, fields } = field;
+          const fieldString = makeFields(fields);
+          return `${fieldName}{${fields}}`;
+        }
+      })
+      .join(",")
+  );
 };
 const gets = async ({ path, fields, accessToken, ...args }) => {
   const headers = {
@@ -161,7 +164,7 @@ const create = async ({
     "Content-Type": "application/json"
   };
   url.pathname = `${url.pathname}/${path}.json`;
-  url.searchParams.append("fields", makeFields(fields));
+  if (fields) url.searchParams.append("fields", makeFields(fields));
   Object.entries(args).forEach(([k, v]) => url.searchParams.append(k, v));
   const body = JSON.stringify({ data, ...(tempBody || {}) });
   const ret = await fetch(url, { method: "post", headers, body });
@@ -319,11 +322,13 @@ class Clio {
     };
     request.headers = request.headers
       ? { ...request.headers, ...headers }
-      : (request.header = headers);
+      : headers;
     return request;
   }
-  async getPage({ url, path, fields }) {
-    const promise = url ? getUrl({ url }) : gets({ path, fields });
+  async getPage({ url, path, fields, ...args }) {
+    const promise = url
+      ? this.getUrl({ url })
+      : this.gets({ path, fields, ...args });
     const {
       meta: { paging: { next, previous } = {} } = {},
       data
@@ -335,12 +340,13 @@ class Clio {
         previous && (() => this.getPage({ url: previous, path, fields }))
     };
   }
-  async map({ page, fields }, f) {
-    getNextPage = await getPage({ path, fields });
-    while (getNextPage) {
-      const { page, getNext } = getNextPage();
+  async map({ path, fields, ...args }, f) {
+    let obj = await this.getPage({ path, fields, ...args });
+    while (obj) {
+      const { page, getNext } = obj;
       await Promise.all(page.map(f));
-      getNextPage = getNext;
+      if (getNext) obj = await getNext();
+      else obj = null;
     }
   }
   async mapEntities({ path, fields }, f) {
@@ -351,13 +357,21 @@ class Clio {
       getNextPage = getNext;
     }
   }
-  async mapEntities2({ path, fields }, f) {
+  async mapEntities2({ path, fields, ...args }, f) {
     return this.map(
-      properties =>
-        new ClioEntity(this, {
+      {
+        fields,
+        path,
+        ...args
+      },
+      properties => {
+        const entity = new ClioEntity(this, {
           fields,
-          type: path
-        })
+          type: path,
+          properties
+        });
+        return f(entity);
+      }
     );
   }
   async getPageEntities({ url, path, fields }) {
@@ -410,7 +424,8 @@ class Clio {
 
   async getUrl({ url, request }) {
     if (!request) request = {};
-    const res = await fetch(url, this.withAccessToken(request));
+    request = await this.withAccessToken(request);
+    const res = await fetch(url, request);
     return getResult(res);
   }
   async makeCustomAction({ label, targetUrl, uiReference, type }) {
