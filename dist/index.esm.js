@@ -1335,16 +1335,15 @@ function () {
             switch (_context30.prev = _context30.next) {
               case 0:
                 path = _ref53.path, fields = _ref53.fields, args = _objectWithoutProperties(_ref53, ["path", "fields"]);
-                console.log("Getting all for ", path);
 
                 if (path) {
-                  _context30.next = 4;
+                  _context30.next = 3;
                   break;
                 }
 
                 throw "Path is required for getAll";
 
-              case 4:
+              case 3:
                 return _context30.abrupt("return", this.map(_objectSpread({
                   path: path,
                   fields: fields
@@ -1352,7 +1351,7 @@ function () {
                   return o;
                 }));
 
-              case 5:
+              case 4:
               case "end":
                 return _context30.stop();
             }
