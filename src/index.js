@@ -447,7 +447,6 @@ class Clio {
     return out;
   }
   async getAll({ path, fields, ...args }) {
-    console.log("Getting all for ", path);
     if (!path) throw "Path is required for getAll";
     return this.map({ path, fields, ...args }, o => o);
   }
