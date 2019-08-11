@@ -433,13 +433,21 @@ class Clio {
         previous && (() => this.getPage({ url: previous, path, fields }))
     };
   }
-  async map({ path, fields, ...args }, f) {
+  async map({ path, fields, isSequential, ...args }, f) {
     if (!path) throw "Path is required for map";
     let obj = await this.getPage({ path, fields, ...args });
     let out = [];
     while (obj) {
       const { page, getNext } = obj;
-      const temp = await Promise.all(page.map(f));
+      let temp = [];
+      if (isSequential) {
+        for (const o of page) {
+          const t = await f(o);
+          temp.push(t);
+        }
+      } else {
+        temp = await Promise.all(page.map(f));
+      }
       out = [...out, ...temp];
       if (getNext) obj = await getNext();
       else obj = null;
@@ -449,6 +457,16 @@ class Clio {
   async getAll({ path, fields, ...args }) {
     if (!path) throw "Path is required for getAll";
     return this.map({ path, fields, ...args }, o => o);
+  }
+  async bulkGetFile({ path, fields, outPath, onProgress }) {
+    if (!path) throw "Path is required for bulkGetFile";
+    const accessToken = await this.getAccessToken();
+    return bulkGetFile({ path, fields, accessToken, outPath, onProgress });
+  }
+  async bulkGetObj({ path, fields, onProgress, outPath }) {
+    if (!path) throw "Path is required for bulkGetFile";
+    const accessToken = await this.getAccessToken();
+    return bulkGetObj({ path, fields, accessToken, outPath, onProgress });
   }
   async mapEntities({ path, fields }, f) {
     let getNextPage = await this.getPageEntities({ path, fields });
