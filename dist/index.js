@@ -2861,6 +2861,245 @@
     };
   }();
 
+  var bulkGetRaw =
+  /*#__PURE__*/
+  function () {
+    var _ref13 = asyncToGenerator(
+    /*#__PURE__*/
+    regenerator.mark(function _callee6(_ref12) {
+      var path, fields, accessToken, onProgress, args, headers, url, ret, pollCheckURL, doCheck, _ret, text, obj;
+
+      return regenerator.wrap(function _callee6$(_context6) {
+        while (1) {
+          switch (_context6.prev = _context6.next) {
+            case 0:
+              path = _ref12.path, fields = _ref12.fields, accessToken = _ref12.accessToken, onProgress = _ref12.onProgress, args = objectWithoutProperties(_ref12, ["path", "fields", "accessToken", "onProgress"]);
+              headers = {
+                "X-BULK": "true",
+                Authorization: "Bearer ".concat(accessToken)
+              }; //Kick off the bulk fetch
+
+              url = new URL(baseUrl);
+              url.pathname = "".concat(url.pathname, "/").concat(path, ".json");
+              if (fields) url.searchParams.append("fields", makeFields(fields));
+              Object.entries(args).forEach(function (_ref14) {
+                var _ref15 = slicedToArray(_ref14, 2),
+                    k = _ref15[0],
+                    v = _ref15[1];
+
+                return url.searchParams.append(k, v);
+              });
+              _context6.next = 8;
+              return fetch(url, {
+                method: "get",
+                headers: headers
+              });
+
+            case 8:
+              ret = _context6.sent;
+              pollCheckURL = ret.headers.get("Location");
+              doCheck = true;
+
+            case 11:
+              if (!doCheck) {
+                _context6.next = 29;
+                break;
+              }
+
+              _context6.next = 14;
+              return fetch(pollCheckURL, {
+                method: "get",
+                headers: headers
+              });
+
+            case 14:
+              _ret = _context6.sent;
+              _context6.t0 = _ret.code;
+              _context6.next = _context6.t0 === 200 ? 18 : _context6.t0 === 303 ? 26 : 27;
+              break;
+
+            case 18:
+              if (!onProgress) {
+                _context6.next = 25;
+                break;
+              }
+
+              _context6.next = 21;
+              return _ret.text();
+
+            case 21:
+              text = _context6.sent;
+              obj = JSON.parse(text);
+              _context6.next = 25;
+              return onProgress(obj);
+
+            case 25:
+              return _context6.abrupt("break", 27);
+
+            case 26:
+              return _context6.abrupt("return", fetch(_ret.headers.get("Location")));
+
+            case 27:
+              _context6.next = 11;
+              break;
+
+            case 29:
+              throw "Failed to download bulk";
+
+            case 30:
+            case "end":
+              return _context6.stop();
+          }
+        }
+      }, _callee6);
+    }));
+
+    return function bulkGetRaw(_x6) {
+      return _ref13.apply(this, arguments);
+    };
+  }();
+
+  var bulkGetText =
+  /*#__PURE__*/
+  function () {
+    var _ref17 = asyncToGenerator(
+    /*#__PURE__*/
+    regenerator.mark(function _callee7(_ref16) {
+      var path, fields, accessToken, onProgress, outPath, ret;
+      return regenerator.wrap(function _callee7$(_context7) {
+        while (1) {
+          switch (_context7.prev = _context7.next) {
+            case 0:
+              path = _ref16.path, fields = _ref16.fields, accessToken = _ref16.accessToken, onProgress = _ref16.onProgress, outPath = _ref16.outPath;
+
+              if (!outPath) {
+                _context7.next = 9;
+                break;
+              }
+
+              _context7.next = 4;
+              return _bulkGetFile({
+                path: path,
+                fields: fields,
+                accessToken: accessToken,
+                onProgress: onProgress,
+                outPath: outPath
+              });
+
+            case 4:
+              _context7.next = 6;
+              return util.promisify(fs.readFile)(outPath);
+
+            case 6:
+              return _context7.abrupt("return", _context7.sent);
+
+            case 9:
+              _context7.next = 11;
+              return bulkGetRaw({
+                path: path,
+                fields: fields,
+                accessToken: accessToken,
+                onProgress: onProgress
+              });
+
+            case 11:
+              ret = _context7.sent;
+              _context7.next = 14;
+              return ret.text();
+
+            case 14:
+              return _context7.abrupt("return", _context7.sent);
+
+            case 15:
+            case "end":
+              return _context7.stop();
+          }
+        }
+      }, _callee7);
+    }));
+
+    return function bulkGetText(_x7) {
+      return _ref17.apply(this, arguments);
+    };
+  }();
+
+  var _bulkGetFile =
+  /*#__PURE__*/
+  function () {
+    var _ref19 = asyncToGenerator(
+    /*#__PURE__*/
+    regenerator.mark(function _callee8(_ref18) {
+      var path, fields, accessToken, onProgress, outPath, ret;
+      return regenerator.wrap(function _callee8$(_context8) {
+        while (1) {
+          switch (_context8.prev = _context8.next) {
+            case 0:
+              path = _ref18.path, fields = _ref18.fields, accessToken = _ref18.accessToken, onProgress = _ref18.onProgress, outPath = _ref18.outPath;
+              _context8.next = 3;
+              return bulkGetRaw({
+                path: path,
+                fields: fields,
+                accessToken: accessToken,
+                onProgress: onProgress
+              });
+
+            case 3:
+              ret = _context8.sent;
+              _context8.next = 6;
+              return new Promise(function (r) {
+                ret.body.pipe(fs.createWriteStream(outPath));
+                ret.body.on("end", function () {
+                  return r();
+                });
+              });
+
+            case 6:
+            case "end":
+              return _context8.stop();
+          }
+        }
+      }, _callee8);
+    }));
+
+    return function bulkGetFile(_x8) {
+      return _ref19.apply(this, arguments);
+    };
+  }();
+
+  var _bulkGetObj =
+  /*#__PURE__*/
+  function () {
+    var _ref21 = asyncToGenerator(
+    /*#__PURE__*/
+    regenerator.mark(function _callee9(_ref20) {
+      var path, fields, accessToken, onProgress, outPath, text;
+      return regenerator.wrap(function _callee9$(_context9) {
+        while (1) {
+          switch (_context9.prev = _context9.next) {
+            case 0:
+              path = _ref20.path, fields = _ref20.fields, accessToken = _ref20.accessToken, onProgress = _ref20.onProgress, outPath = _ref20.outPath;
+              text = bulkGetText({
+                path: path,
+                fields: fields,
+                accessToken: accessToken,
+                onProgress: onProgress,
+                outPath: outPath
+              });
+              return _context9.abrupt("return", JSON.parse(text));
+
+            case 3:
+            case "end":
+              return _context9.stop();
+          }
+        }
+      }, _callee9);
+    }));
+
+    return function bulkGetObj(_x9) {
+      return _ref21.apply(this, arguments);
+    };
+  }();
+
   var _makeWebHook =
   /*#__PURE__*/
   function () {
@@ -3815,13 +4054,13 @@
         var _map = asyncToGenerator(
         /*#__PURE__*/
         regenerator.mark(function _callee29(_ref52, f) {
-          var path, fields, args, obj, out, _obj, page, getNext, temp;
+          var path, fields, isSequential, args, obj, out, _obj, page, getNext, temp, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, o, t;
 
           return regenerator.wrap(function _callee29$(_context29) {
             while (1) {
               switch (_context29.prev = _context29.next) {
                 case 0:
-                  path = _ref52.path, fields = _ref52.fields, args = objectWithoutProperties(_ref52, ["path", "fields"]);
+                  path = _ref52.path, fields = _ref52.fields, isSequential = _ref52.isSequential, args = objectWithoutProperties(_ref52, ["path", "fields", "isSequential"]);
 
                   if (path) {
                     _context29.next = 3;
@@ -3843,47 +4082,120 @@
 
                 case 7:
                   if (!obj) {
-                    _context29.next = 22;
+                    _context29.next = 54;
                     break;
                   }
 
                   _obj = obj, page = _obj.page, getNext = _obj.getNext;
-                  _context29.next = 11;
-                  return Promise.all(page.map(f));
+                  temp = [];
 
-                case 11:
-                  temp = _context29.sent;
-                  out = [].concat(toConsumableArray(out), toConsumableArray(temp));
-
-                  if (!getNext) {
-                    _context29.next = 19;
+                  if (!isSequential) {
+                    _context29.next = 41;
                     break;
                   }
 
-                  _context29.next = 16;
-                  return getNext();
+                  _iteratorNormalCompletion = true;
+                  _didIteratorError = false;
+                  _iteratorError = undefined;
+                  _context29.prev = 14;
+                  _iterator = page[Symbol.iterator]();
 
                 case 16:
-                  obj = _context29.sent;
-                  _context29.next = 20;
-                  break;
+                  if (_iteratorNormalCompletion = (_step = _iterator.next()).done) {
+                    _context29.next = 25;
+                    break;
+                  }
 
-                case 19:
-                  obj = null;
+                  o = _step.value;
+                  _context29.next = 20;
+                  return f(o);
 
                 case 20:
+                  t = _context29.sent;
+                  temp.push(t);
+
+                case 22:
+                  _iteratorNormalCompletion = true;
+                  _context29.next = 16;
+                  break;
+
+                case 25:
+                  _context29.next = 31;
+                  break;
+
+                case 27:
+                  _context29.prev = 27;
+                  _context29.t0 = _context29["catch"](14);
+                  _didIteratorError = true;
+                  _iteratorError = _context29.t0;
+
+                case 31:
+                  _context29.prev = 31;
+                  _context29.prev = 32;
+
+                  if (!_iteratorNormalCompletion && _iterator.return != null) {
+                    _iterator.return();
+                  }
+
+                case 34:
+                  _context29.prev = 34;
+
+                  if (!_didIteratorError) {
+                    _context29.next = 37;
+                    break;
+                  }
+
+                  throw _iteratorError;
+
+                case 37:
+                  return _context29.finish(34);
+
+                case 38:
+                  return _context29.finish(31);
+
+                case 39:
+                  _context29.next = 44;
+                  break;
+
+                case 41:
+                  _context29.next = 43;
+                  return Promise.all(page.map(f));
+
+                case 43:
+                  temp = _context29.sent;
+
+                case 44:
+                  out = [].concat(toConsumableArray(out), toConsumableArray(temp));
+
+                  if (!getNext) {
+                    _context29.next = 51;
+                    break;
+                  }
+
+                  _context29.next = 48;
+                  return getNext();
+
+                case 48:
+                  obj = _context29.sent;
+                  _context29.next = 52;
+                  break;
+
+                case 51:
+                  obj = null;
+
+                case 52:
                   _context29.next = 7;
                   break;
 
-                case 22:
+                case 54:
                   return _context29.abrupt("return", out);
 
-                case 23:
+                case 55:
                 case "end":
                   return _context29.stop();
               }
             }
-          }, _callee29, this);
+          }, _callee29, this, [[14, 27, 31, 39], [32,, 34, 38]]);
         }));
 
         function map(_x25, _x26) {
@@ -3935,43 +4247,40 @@
         return getAll;
       }()
     }, {
-      key: "mapEntities",
+      key: "bulkGetFile",
       value: function () {
-        var _mapEntities = asyncToGenerator(
+        var _bulkGetFile2 = asyncToGenerator(
         /*#__PURE__*/
-        regenerator.mark(function _callee31(_ref54, f) {
-          var path, fields, getNextPage, _getNextPage, page, getNext;
-
+        regenerator.mark(function _callee31(_ref54) {
+          var path, fields, outPath, onProgress, accessToken;
           return regenerator.wrap(function _callee31$(_context31) {
             while (1) {
               switch (_context31.prev = _context31.next) {
                 case 0:
-                  path = _ref54.path, fields = _ref54.fields;
-                  _context31.next = 3;
-                  return this.getPageEntities({
-                    path: path,
-                    fields: fields
-                  });
+                  path = _ref54.path, fields = _ref54.fields, outPath = _ref54.outPath, onProgress = _ref54.onProgress;
 
-                case 3:
-                  getNextPage = _context31.sent;
-
-                case 4:
-                  if (!getNextPage) {
-                    _context31.next = 11;
+                  if (path) {
+                    _context31.next = 3;
                     break;
                   }
 
-                  _getNextPage = getNextPage(), page = _getNextPage.page, getNext = _getNextPage.getNext;
-                  _context31.next = 8;
-                  return Promise.all(page.map(f));
+                  throw "Path is required for bulkGetFile";
 
-                case 8:
-                  getNextPage = getNext;
-                  _context31.next = 4;
-                  break;
+                case 3:
+                  _context31.next = 5;
+                  return this.getAccessToken();
 
-                case 11:
+                case 5:
+                  accessToken = _context31.sent;
+                  return _context31.abrupt("return", _bulkGetFile({
+                    path: path,
+                    fields: fields,
+                    accessToken: accessToken,
+                    outPath: outPath,
+                    onProgress: onProgress
+                  }));
+
+                case 7:
                 case "end":
                   return _context31.stop();
               }
@@ -3979,7 +4288,106 @@
           }, _callee31, this);
         }));
 
-        function mapEntities(_x28, _x29) {
+        function bulkGetFile(_x28) {
+          return _bulkGetFile2.apply(this, arguments);
+        }
+
+        return bulkGetFile;
+      }()
+    }, {
+      key: "bulkGetObj",
+      value: function () {
+        var _bulkGetObj2 = asyncToGenerator(
+        /*#__PURE__*/
+        regenerator.mark(function _callee32(_ref55) {
+          var path, fields, onProgress, outPath, accessToken;
+          return regenerator.wrap(function _callee32$(_context32) {
+            while (1) {
+              switch (_context32.prev = _context32.next) {
+                case 0:
+                  path = _ref55.path, fields = _ref55.fields, onProgress = _ref55.onProgress, outPath = _ref55.outPath;
+
+                  if (path) {
+                    _context32.next = 3;
+                    break;
+                  }
+
+                  throw "Path is required for bulkGetFile";
+
+                case 3:
+                  _context32.next = 5;
+                  return this.getAccessToken();
+
+                case 5:
+                  accessToken = _context32.sent;
+                  return _context32.abrupt("return", _bulkGetObj({
+                    path: path,
+                    fields: fields,
+                    accessToken: accessToken,
+                    outPath: outPath,
+                    onProgress: onProgress
+                  }));
+
+                case 7:
+                case "end":
+                  return _context32.stop();
+              }
+            }
+          }, _callee32, this);
+        }));
+
+        function bulkGetObj(_x29) {
+          return _bulkGetObj2.apply(this, arguments);
+        }
+
+        return bulkGetObj;
+      }()
+    }, {
+      key: "mapEntities",
+      value: function () {
+        var _mapEntities = asyncToGenerator(
+        /*#__PURE__*/
+        regenerator.mark(function _callee33(_ref56, f) {
+          var path, fields, getNextPage, _getNextPage, page, getNext;
+
+          return regenerator.wrap(function _callee33$(_context33) {
+            while (1) {
+              switch (_context33.prev = _context33.next) {
+                case 0:
+                  path = _ref56.path, fields = _ref56.fields;
+                  _context33.next = 3;
+                  return this.getPageEntities({
+                    path: path,
+                    fields: fields
+                  });
+
+                case 3:
+                  getNextPage = _context33.sent;
+
+                case 4:
+                  if (!getNextPage) {
+                    _context33.next = 11;
+                    break;
+                  }
+
+                  _getNextPage = getNextPage(), page = _getNextPage.page, getNext = _getNextPage.getNext;
+                  _context33.next = 8;
+                  return Promise.all(page.map(f));
+
+                case 8:
+                  getNextPage = getNext;
+                  _context33.next = 4;
+                  break;
+
+                case 11:
+                case "end":
+                  return _context33.stop();
+              }
+            }
+          }, _callee33, this);
+        }));
+
+        function mapEntities(_x30, _x31) {
           return _mapEntities.apply(this, arguments);
         }
 
@@ -3990,16 +4398,16 @@
       value: function () {
         var _mapEntities2 = asyncToGenerator(
         /*#__PURE__*/
-        regenerator.mark(function _callee32(_ref55, f) {
+        regenerator.mark(function _callee34(_ref57, f) {
           var _this2 = this;
 
           var path, fields, args;
-          return regenerator.wrap(function _callee32$(_context32) {
+          return regenerator.wrap(function _callee34$(_context34) {
             while (1) {
-              switch (_context32.prev = _context32.next) {
+              switch (_context34.prev = _context34.next) {
                 case 0:
-                  path = _ref55.path, fields = _ref55.fields, args = objectWithoutProperties(_ref55, ["path", "fields"]);
-                  return _context32.abrupt("return", this.map(_objectSpread({
+                  path = _ref57.path, fields = _ref57.fields, args = objectWithoutProperties(_ref57, ["path", "fields"]);
+                  return _context34.abrupt("return", this.map(_objectSpread({
                     fields: fields,
                     path: path
                   }, args), function (properties) {
@@ -4013,13 +4421,13 @@
 
                 case 2:
                 case "end":
-                  return _context32.stop();
+                  return _context34.stop();
               }
             }
-          }, _callee32, this);
+          }, _callee34, this);
         }));
 
-        function mapEntities2(_x30, _x31) {
+        function mapEntities2(_x32, _x33) {
           return _mapEntities2.apply(this, arguments);
         }
 
@@ -4030,15 +4438,15 @@
       value: function () {
         var _getPageEntities = asyncToGenerator(
         /*#__PURE__*/
-        regenerator.mark(function _callee33(_ref56) {
-          var url, path, fields, _ref57, page, getNext, getPrevious;
+        regenerator.mark(function _callee35(_ref58) {
+          var url, path, fields, _ref59, page, getNext, getPrevious;
 
-          return regenerator.wrap(function _callee33$(_context33) {
+          return regenerator.wrap(function _callee35$(_context35) {
             while (1) {
-              switch (_context33.prev = _context33.next) {
+              switch (_context35.prev = _context35.next) {
                 case 0:
-                  url = _ref56.url, path = _ref56.path, fields = _ref56.fields;
-                  _context33.next = 3;
+                  url = _ref58.url, path = _ref58.path, fields = _ref58.fields;
+                  _context35.next = 3;
                   return this.getPage({
                     url: url,
                     path: path,
@@ -4046,11 +4454,11 @@
                   });
 
                 case 3:
-                  _ref57 = _context33.sent;
-                  page = _ref57.page;
-                  getNext = _ref57.getNext;
-                  getPrevious = _ref57.getPrevious;
-                  return _context33.abrupt("return", this.withEntities({
+                  _ref59 = _context35.sent;
+                  page = _ref59.page;
+                  getNext = _ref59.getNext;
+                  getPrevious = _ref59.getPrevious;
+                  return _context35.abrupt("return", this.withEntities({
                     page: page,
                     getNext: getNext,
                     getPrevious: getPrevious,
@@ -4060,13 +4468,13 @@
 
                 case 8:
                 case "end":
-                  return _context33.stop();
+                  return _context35.stop();
               }
             }
-          }, _callee33, this);
+          }, _callee35, this);
         }));
 
-        function getPageEntities(_x32) {
+        function getPageEntities(_x34) {
           return _getPageEntities.apply(this, arguments);
         }
 
@@ -4077,15 +4485,15 @@
       value: function () {
         var _withEntities = asyncToGenerator(
         /*#__PURE__*/
-        regenerator.mark(function _callee36(_ref58) {
+        regenerator.mark(function _callee38(_ref60) {
           var _this3 = this;
 
           var page, getNext, getPrevious, path, fields, entities;
-          return regenerator.wrap(function _callee36$(_context36) {
+          return regenerator.wrap(function _callee38$(_context38) {
             while (1) {
-              switch (_context36.prev = _context36.next) {
+              switch (_context38.prev = _context38.next) {
                 case 0:
-                  page = _ref58.page, getNext = _ref58.getNext, getPrevious = _ref58.getPrevious, path = _ref58.path, fields = _ref58.fields;
+                  page = _ref60.page, getNext = _ref60.getNext, getPrevious = _ref60.getPrevious, path = _ref60.path, fields = _ref60.fields;
                   //convert page elements to entities
                   entities = page.map(function (properties) {
                     return _this3.makeEntity(_this3, {
@@ -4094,29 +4502,29 @@
                       type: path
                     });
                   });
-                  return _context36.abrupt("return", {
+                  return _context38.abrupt("return", {
                     page: entities,
                     raw: page,
                     getNext: getNext &&
                     /*#__PURE__*/
                     asyncToGenerator(
                     /*#__PURE__*/
-                    regenerator.mark(function _callee34() {
-                      var _ref60, page, getNext, getPrevious;
+                    regenerator.mark(function _callee36() {
+                      var _ref62, page, getNext, getPrevious;
 
-                      return regenerator.wrap(function _callee34$(_context34) {
+                      return regenerator.wrap(function _callee36$(_context36) {
                         while (1) {
-                          switch (_context34.prev = _context34.next) {
+                          switch (_context36.prev = _context36.next) {
                             case 0:
-                              _context34.next = 2;
+                              _context36.next = 2;
                               return getNext();
 
                             case 2:
-                              _ref60 = _context34.sent;
-                              page = _ref60.page;
-                              getNext = _ref60.getNext;
-                              getPrevious = _ref60.getPrevious;
-                              return _context34.abrupt("return", _this3.withEntities({
+                              _ref62 = _context36.sent;
+                              page = _ref62.page;
+                              getNext = _ref62.getNext;
+                              getPrevious = _ref62.getPrevious;
+                              return _context36.abrupt("return", _this3.withEntities({
                                 page: page,
                                 getNext: getNext,
                                 getPrevious: getPrevious,
@@ -4126,31 +4534,31 @@
 
                             case 7:
                             case "end":
-                              return _context34.stop();
+                              return _context36.stop();
                           }
                         }
-                      }, _callee34);
+                      }, _callee36);
                     })),
                     getPrevious: getPrevious &&
                     /*#__PURE__*/
                     asyncToGenerator(
                     /*#__PURE__*/
-                    regenerator.mark(function _callee35() {
-                      var _ref62, page, getNext, getPrevious;
+                    regenerator.mark(function _callee37() {
+                      var _ref64, page, getNext, getPrevious;
 
-                      return regenerator.wrap(function _callee35$(_context35) {
+                      return regenerator.wrap(function _callee37$(_context37) {
                         while (1) {
-                          switch (_context35.prev = _context35.next) {
+                          switch (_context37.prev = _context37.next) {
                             case 0:
-                              _context35.next = 2;
+                              _context37.next = 2;
                               return getPrevious();
 
                             case 2:
-                              _ref62 = _context35.sent;
-                              page = _ref62.page;
-                              getNext = _ref62.getNext;
-                              getPrevious = _ref62.getPrevious;
-                              return _context35.abrupt("return", _this3.withEntities({
+                              _ref64 = _context37.sent;
+                              page = _ref64.page;
+                              getNext = _ref64.getNext;
+                              getPrevious = _ref64.getPrevious;
+                              return _context37.abrupt("return", _this3.withEntities({
                                 page: page,
                                 getNext: getNext,
                                 getPrevious: getPrevious,
@@ -4160,22 +4568,22 @@
 
                             case 7:
                             case "end":
-                              return _context35.stop();
+                              return _context37.stop();
                           }
                         }
-                      }, _callee35);
+                      }, _callee37);
                     }))
                   });
 
                 case 3:
                 case "end":
-                  return _context36.stop();
+                  return _context38.stop();
               }
             }
-          }, _callee36);
+          }, _callee38);
         }));
 
-        function withEntities(_x33) {
+        function withEntities(_x35) {
           return _withEntities.apply(this, arguments);
         }
 
@@ -4186,35 +4594,35 @@
       value: function () {
         var _getUrl = asyncToGenerator(
         /*#__PURE__*/
-        regenerator.mark(function _callee37(_ref63) {
+        regenerator.mark(function _callee39(_ref65) {
           var url, request, res;
-          return regenerator.wrap(function _callee37$(_context37) {
+          return regenerator.wrap(function _callee39$(_context39) {
             while (1) {
-              switch (_context37.prev = _context37.next) {
+              switch (_context39.prev = _context39.next) {
                 case 0:
-                  url = _ref63.url, request = _ref63.request;
+                  url = _ref65.url, request = _ref65.request;
                   if (!request) request = {};
-                  _context37.next = 4;
+                  _context39.next = 4;
                   return this.withAccessToken(request);
 
                 case 4:
-                  request = _context37.sent;
-                  _context37.next = 7;
+                  request = _context39.sent;
+                  _context39.next = 7;
                   return fetch(url, request);
 
                 case 7:
-                  res = _context37.sent;
-                  return _context37.abrupt("return", getResult(res));
+                  res = _context39.sent;
+                  return _context39.abrupt("return", getResult(res));
 
                 case 9:
                 case "end":
-                  return _context37.stop();
+                  return _context39.stop();
               }
             }
-          }, _callee37, this);
+          }, _callee39, this);
         }));
 
-        function getUrl(_x34) {
+        function getUrl(_x36) {
           return _getUrl.apply(this, arguments);
         }
 
@@ -4225,18 +4633,18 @@
       value: function () {
         var _makeCustomAction = asyncToGenerator(
         /*#__PURE__*/
-        regenerator.mark(function _callee38(_ref64) {
-          var label, targetUrl, uiReference, type, _ref65, _ref65$data, id, etag, created_at, updated_at, newLabel, target_url, ui_reference;
+        regenerator.mark(function _callee40(_ref66) {
+          var label, targetUrl, uiReference, type, _ref67, _ref67$data, id, etag, created_at, updated_at, newLabel, target_url, ui_reference;
 
-          return regenerator.wrap(function _callee38$(_context38) {
+          return regenerator.wrap(function _callee40$(_context40) {
             while (1) {
-              switch (_context38.prev = _context38.next) {
+              switch (_context40.prev = _context40.next) {
                 case 0:
-                  label = _ref64.label, targetUrl = _ref64.targetUrl, uiReference = _ref64.uiReference, type = _ref64.type;
+                  label = _ref66.label, targetUrl = _ref66.targetUrl, uiReference = _ref66.uiReference, type = _ref66.type;
                   if (type) uiReference = "".concat(type, "/show");
 
                   if (uiReference) {
-                    _context38.next = 4;
+                    _context40.next = 4;
                     break;
                   }
 
@@ -4244,7 +4652,7 @@
 
                 case 4:
                   if (label) {
-                    _context38.next = 6;
+                    _context40.next = 6;
                     break;
                   }
 
@@ -4252,14 +4660,14 @@
 
                 case 6:
                   if (targetUrl) {
-                    _context38.next = 8;
+                    _context40.next = 8;
                     break;
                   }
 
                   throw "targeUrl is required";
 
                 case 8:
-                  _context38.next = 10;
+                  _context40.next = 10;
                   return this.create({
                     path: "custom_actions",
                     fields: ["label", "target_url", "ui_reference", "id", "etag", "created_at", "updated_at"],
@@ -4271,16 +4679,16 @@
                   });
 
                 case 10:
-                  _ref65 = _context38.sent;
-                  _ref65$data = _ref65.data;
-                  id = _ref65$data.id;
-                  etag = _ref65$data.etag;
-                  created_at = _ref65$data.created_at;
-                  updated_at = _ref65$data.updated_at;
-                  newLabel = _ref65$data.label;
-                  target_url = _ref65$data.target_url;
-                  ui_reference = _ref65$data.ui_reference;
-                  return _context38.abrupt("return", {
+                  _ref67 = _context40.sent;
+                  _ref67$data = _ref67.data;
+                  id = _ref67$data.id;
+                  etag = _ref67$data.etag;
+                  created_at = _ref67$data.created_at;
+                  updated_at = _ref67$data.updated_at;
+                  newLabel = _ref67$data.label;
+                  target_url = _ref67$data.target_url;
+                  ui_reference = _ref67$data.ui_reference;
+                  return _context40.abrupt("return", {
                     id: id,
                     etag: etag,
                     createdAt: created_at,
@@ -4292,13 +4700,13 @@
 
                 case 20:
                 case "end":
-                  return _context38.stop();
+                  return _context40.stop();
               }
             }
-          }, _callee38, this);
+          }, _callee40, this);
         }));
 
-        function makeCustomAction(_x35) {
+        function makeCustomAction(_x37) {
           return _makeCustomAction.apply(this, arguments);
         }
 
@@ -4309,19 +4717,19 @@
       value: function () {
         var _makeWebHook2 = asyncToGenerator(
         /*#__PURE__*/
-        regenerator.mark(function _callee39(_ref66) {
+        regenerator.mark(function _callee41(_ref68) {
           var url, fields, events, model, expires, accessToken;
-          return regenerator.wrap(function _callee39$(_context39) {
+          return regenerator.wrap(function _callee41$(_context41) {
             while (1) {
-              switch (_context39.prev = _context39.next) {
+              switch (_context41.prev = _context41.next) {
                 case 0:
-                  url = _ref66.url, fields = _ref66.fields, events = _ref66.events, model = _ref66.model, expires = _ref66.expires;
-                  _context39.next = 3;
+                  url = _ref68.url, fields = _ref68.fields, events = _ref68.events, model = _ref68.model, expires = _ref68.expires;
+                  _context41.next = 3;
                   return this.getAccessToken();
 
                 case 3:
-                  accessToken = _context39.sent;
-                  _context39.next = 6;
+                  accessToken = _context41.sent;
+                  _context41.next = 6;
                   return _makeWebHook({
                     url: url,
                     fields: fields,
@@ -4332,17 +4740,17 @@
                   });
 
                 case 6:
-                  return _context39.abrupt("return", _context39.sent);
+                  return _context41.abrupt("return", _context41.sent);
 
                 case 7:
                 case "end":
-                  return _context39.stop();
+                  return _context41.stop();
               }
             }
-          }, _callee39, this);
+          }, _callee41, this);
         }));
 
-        function makeWebHook(_x36) {
+        function makeWebHook(_x38) {
           return _makeWebHook2.apply(this, arguments);
         }
 
@@ -4353,14 +4761,14 @@
       value: function () {
         var _makeEntity = asyncToGenerator(
         /*#__PURE__*/
-        regenerator.mark(function _callee40(_ref67) {
+        regenerator.mark(function _callee42(_ref69) {
           var type, id, fields, properties;
-          return regenerator.wrap(function _callee40$(_context40) {
+          return regenerator.wrap(function _callee42$(_context42) {
             while (1) {
-              switch (_context40.prev = _context40.next) {
+              switch (_context42.prev = _context42.next) {
                 case 0:
-                  type = _ref67.type, id = _ref67.id, fields = _ref67.fields, properties = _ref67.properties;
-                  return _context40.abrupt("return", new ClioEntity(this, {
+                  type = _ref69.type, id = _ref69.id, fields = _ref69.fields, properties = _ref69.properties;
+                  return _context42.abrupt("return", new ClioEntity(this, {
                     type: type,
                     id: id,
                     fields: fields,
@@ -4369,13 +4777,13 @@
 
                 case 2:
                 case "end":
-                  return _context40.stop();
+                  return _context42.stop();
               }
             }
-          }, _callee40, this);
+          }, _callee42, this);
         }));
 
-        function makeEntity(_x37) {
+        function makeEntity(_x39) {
           return _makeEntity.apply(this, arguments);
         }
 
@@ -4386,104 +4794,104 @@
       value: function () {
         var _clear = asyncToGenerator(
         /*#__PURE__*/
-        regenerator.mark(function _callee41(path) {
-          var os, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, id;
+        regenerator.mark(function _callee43(path) {
+          var os, _iteratorNormalCompletion2, _didIteratorError2, _iteratorError2, _iterator2, _step2, id;
 
-          return regenerator.wrap(function _callee41$(_context41) {
+          return regenerator.wrap(function _callee43$(_context43) {
             while (1) {
-              switch (_context41.prev = _context41.next) {
+              switch (_context43.prev = _context43.next) {
                 case 0:
                   console.log("I am starting clear", path);
-                  _context41.next = 3;
+                  _context43.next = 3;
                   return this.getAll({
                     path: path
                   });
 
                 case 3:
-                  os = _context41.sent;
+                  os = _context43.sent;
                   console.log("I got my os");
                   console.log(os);
-                  _iteratorNormalCompletion = true;
-                  _didIteratorError = false;
-                  _iteratorError = undefined;
-                  _context41.prev = 9;
-                  _iterator = os[Symbol.iterator]();
+                  _iteratorNormalCompletion2 = true;
+                  _didIteratorError2 = false;
+                  _iteratorError2 = undefined;
+                  _context43.prev = 9;
+                  _iterator2 = os[Symbol.iterator]();
 
                 case 11:
-                  if (_iteratorNormalCompletion = (_step = _iterator.next()).done) {
-                    _context41.next = 25;
+                  if (_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done) {
+                    _context43.next = 25;
                     break;
                   }
 
-                  id = _step.value.id;
+                  id = _step2.value.id;
                   console.log("Removing", id);
-                  _context41.prev = 14;
-                  _context41.next = 17;
+                  _context43.prev = 14;
+                  _context43.next = 17;
                   return this.remove({
                     path: path,
                     id: id
                   });
 
                 case 17:
-                  _context41.next = 22;
+                  _context43.next = 22;
                   break;
 
                 case 19:
-                  _context41.prev = 19;
-                  _context41.t0 = _context41["catch"](14);
-                  console.log(_context41.t0);
+                  _context43.prev = 19;
+                  _context43.t0 = _context43["catch"](14);
+                  console.log(_context43.t0);
 
                 case 22:
-                  _iteratorNormalCompletion = true;
-                  _context41.next = 11;
+                  _iteratorNormalCompletion2 = true;
+                  _context43.next = 11;
                   break;
 
                 case 25:
-                  _context41.next = 31;
+                  _context43.next = 31;
                   break;
 
                 case 27:
-                  _context41.prev = 27;
-                  _context41.t1 = _context41["catch"](9);
-                  _didIteratorError = true;
-                  _iteratorError = _context41.t1;
+                  _context43.prev = 27;
+                  _context43.t1 = _context43["catch"](9);
+                  _didIteratorError2 = true;
+                  _iteratorError2 = _context43.t1;
 
                 case 31:
-                  _context41.prev = 31;
-                  _context41.prev = 32;
+                  _context43.prev = 31;
+                  _context43.prev = 32;
 
-                  if (!_iteratorNormalCompletion && _iterator.return != null) {
-                    _iterator.return();
+                  if (!_iteratorNormalCompletion2 && _iterator2.return != null) {
+                    _iterator2.return();
                   }
 
                 case 34:
-                  _context41.prev = 34;
+                  _context43.prev = 34;
 
-                  if (!_didIteratorError) {
-                    _context41.next = 37;
+                  if (!_didIteratorError2) {
+                    _context43.next = 37;
                     break;
                   }
 
-                  throw _iteratorError;
+                  throw _iteratorError2;
 
                 case 37:
-                  return _context41.finish(34);
+                  return _context43.finish(34);
 
                 case 38:
-                  return _context41.finish(31);
+                  return _context43.finish(31);
 
                 case 39:
                   console.log("Done with clear");
 
                 case 40:
                 case "end":
-                  return _context41.stop();
+                  return _context43.stop();
               }
             }
-          }, _callee41, this, [[9, 27, 31, 39], [14, 19], [32,, 34, 38]]);
+          }, _callee43, this, [[9, 27, 31, 39], [14, 19], [32,, 34, 38]]);
         }));
 
-        function clear(_x38) {
+        function clear(_x40) {
           return _clear.apply(this, arguments);
         }
 
@@ -4499,12 +4907,12 @@
   var ClioEntity =
   /*#__PURE__*/
   function () {
-    function ClioEntity(clio, _ref68) {
-      var etag = _ref68.etag,
-          id = _ref68.id,
-          properties = _ref68.properties,
-          fields = _ref68.fields,
-          type = _ref68.type;
+    function ClioEntity(clio, _ref70) {
+      var etag = _ref70.etag,
+          id = _ref70.id,
+          properties = _ref70.properties,
+          fields = _ref70.fields,
+          type = _ref70.type;
 
       classCallCheck(this, ClioEntity);
 
@@ -4521,14 +4929,14 @@
       value: function () {
         var _load2 = asyncToGenerator(
         /*#__PURE__*/
-        regenerator.mark(function _callee42() {
-          var _ref69, etag, properties;
+        regenerator.mark(function _callee44() {
+          var _ref71, etag, properties;
 
-          return regenerator.wrap(function _callee42$(_context42) {
+          return regenerator.wrap(function _callee44$(_context44) {
             while (1) {
-              switch (_context42.prev = _context42.next) {
+              switch (_context44.prev = _context44.next) {
                 case 0:
-                  _context42.next = 2;
+                  _context44.next = 2;
                   return this.clio.get({
                     type: this.type,
                     id: this.id,
@@ -4536,19 +4944,19 @@
                   });
 
                 case 2:
-                  _ref69 = _context42.sent;
-                  etag = _ref69.etag;
-                  properties = objectWithoutProperties(_ref69, ["etag"]);
+                  _ref71 = _context44.sent;
+                  etag = _ref71.etag;
+                  properties = objectWithoutProperties(_ref71, ["etag"]);
                   this.etag = etag;
                   this.properties = properties;
-                  return _context42.abrupt("return", this);
+                  return _context44.abrupt("return", this);
 
                 case 8:
                 case "end":
-                  return _context42.stop();
+                  return _context44.stop();
               }
             }
-          }, _callee42, this);
+          }, _callee44, this);
         }));
 
         function load() {
@@ -4562,13 +4970,13 @@
       value: function () {
         var _update3 = asyncToGenerator(
         /*#__PURE__*/
-        regenerator.mark(function _callee43(changes) {
+        regenerator.mark(function _callee45(changes) {
           var ret;
-          return regenerator.wrap(function _callee43$(_context43) {
+          return regenerator.wrap(function _callee45$(_context45) {
             while (1) {
-              switch (_context43.prev = _context43.next) {
+              switch (_context45.prev = _context45.next) {
                 case 0:
-                  _context43.next = 2;
+                  _context45.next = 2;
                   return this.clio.update({
                     path: this.type,
                     id: this.id,
@@ -4577,7 +4985,7 @@
                   });
 
                 case 2:
-                  ret = _context43.sent;
+                  ret = _context45.sent;
                   this.properties = _objectSpread({}, this.properties, {
                     ret: ret
                   });
@@ -4585,13 +4993,13 @@
 
                 case 5:
                 case "end":
-                  return _context43.stop();
+                  return _context45.stop();
               }
             }
-          }, _callee43, this);
+          }, _callee45, this);
         }));
 
-        function update(_x39) {
+        function update(_x41) {
           return _update3.apply(this, arguments);
         }
 
@@ -4602,22 +5010,22 @@
       value: function () {
         var _delete2 = asyncToGenerator(
         /*#__PURE__*/
-        regenerator.mark(function _callee44() {
-          return regenerator.wrap(function _callee44$(_context44) {
+        regenerator.mark(function _callee46() {
+          return regenerator.wrap(function _callee46$(_context46) {
             while (1) {
-              switch (_context44.prev = _context44.next) {
+              switch (_context46.prev = _context46.next) {
                 case 0:
-                  return _context44.abrupt("return", this.clio.remove({
+                  return _context46.abrupt("return", this.clio.remove({
                     path: this.type,
                     id: this.id
                   }));
 
                 case 1:
                 case "end":
-                  return _context44.stop();
+                  return _context46.stop();
               }
             }
-          }, _callee44, this);
+          }, _callee46, this);
         }));
 
         function _delete() {
