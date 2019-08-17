@@ -612,23 +612,21 @@ function () {
             throw obj;
 
           case 27:
-            console.log("I am giving you object now!!!");
-            console.log(text);
             return _context10.abrupt("return", obj);
 
-          case 32:
-            _context10.prev = 32;
+          case 30:
+            _context10.prev = 30;
             _context10.t0 = _context10["catch"](23);
             console.log("Hit error parsing result in makewebhook, probable error message");
             console.log(text);
             throw text;
 
-          case 37:
+          case 35:
           case "end":
             return _context10.stop();
         }
       }
-    }, _callee10, null, [[23, 32]]);
+    }, _callee10, null, [[23, 30]]);
   }));
 
   return function makeWebHook(_x10) {
@@ -643,10 +641,6 @@ var validateSignature = function validateSignature(_ref24) {
   var cipher = createHmac("sha256", secret);
   cipher.update(body);
   var calculatedSignature = cipher.digest("hex");
-  console.log("Received signature", signature);
-  console.log("Body");
-  console.log(body);
-  console.log("Calculated signature", calculatedSignature);
   return signature !== calculatedSignature;
 };
 
