@@ -21,7 +21,8 @@ var util = require('util');
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { if (i % 2) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } else { Object.defineProperties(target, Object.getOwnPropertyDescriptors(arguments[i])); } } return target; }
 
-var baseUrl = "https://app.clio.com/api/v4";
+var baseHost = "https://app.clio.com";
+var baseUrl = baseHost + "/api/v4";
 
 var getResult =
 /*#__PURE__*/
@@ -100,7 +101,7 @@ function () {
               grant_type: "authorization_code"
             });
             _context2.next = 4;
-            return fetch("https://app.clio.com/oauth/token", {
+            return fetch(baseHost + "/oauth/token", {
               method: "post",
               body: body
             });
@@ -156,7 +157,7 @@ function () {
             headers = {
               Authorization: "Bearer ".concat(accessToken)
             };
-            url = new URL("https://app.clio.com/oauth/deauthorize");
+            url = new URL(baseHost + "/oauth/deauthorize");
             _context3.next = 5;
             return fetch(url, {
               headers: headers
@@ -198,7 +199,7 @@ function () {
               grant_type: "refresh_token"
             });
             _context4.next = 4;
-            return fetch("https://app.clio.com/oauth/token", {
+            return fetch(baseHost + "/oauth/token", {
               method: "post",
               body: body
             });
@@ -552,7 +553,7 @@ function () {
             headers = _defineProperty({
               Authorization: "Bearer ".concat(accessToken)
             }, "Content-Type", "application/json");
-            whUrl = new URL("https://app.clio.com/api/v4/webhooks.json");
+            whUrl = new URL(baseUrl + "/webhooks.json");
 
             if (model) {
               _context10.next = 5;
@@ -2479,6 +2480,7 @@ function () {
 exports.Clio = Clio;
 exports.ClioEntity = ClioEntity;
 exports.authorize = _authorize;
+exports.baseHost = baseHost;
 exports.create = _create;
 exports.deauthorize = _deauthorize;
 exports.get = _get;
