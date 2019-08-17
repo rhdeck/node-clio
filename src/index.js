@@ -4,7 +4,8 @@ import { createHmac } from "crypto";
 import { createWriteStream, readFile } from "fs";
 import { promisify } from "util";
 //#region Function API
-const baseUrl = "https://app.clio.com/api/v4";
+const baseHost = "https://app.clio.com";
+const baseUrl = baseHost + "/api/v4";
 const getResult = async ret => {
   if (ret.status === 204) return null;
   const text = await ret.text();
@@ -30,7 +31,7 @@ const authorize = async ({ clientId, clientSecret, code, redirectUri }) => {
     redirect_uri: redirectUri,
     grant_type: "authorization_code"
   });
-  const res = await fetch("https://app.clio.com/oauth/token", {
+  const res = await fetch(baseHost + "/oauth/token", {
     method: "post",
     body
   });
@@ -55,7 +56,7 @@ const deauthorize = async ({ accessToken }) => {
   const headers = {
     Authorization: `Bearer ${accessToken}`
   };
-  const url = new URL("https://app.clio.com/oauth/deauthorize");
+  const url = new URL(baseHost + "/oauth/deauthorize");
   await fetch(url, { headers });
   return true;
 };
@@ -66,7 +67,7 @@ const getAccessToken = async ({ clientId, clientSecret, refreshToken }) => {
     refresh_token: refreshToken,
     grant_type: "refresh_token"
   });
-  const res = await fetch("https://app.clio.com/oauth/token", {
+  const res = await fetch(baseHost + "/oauth/token", {
     method: "post",
     body
   });
@@ -198,7 +199,7 @@ const makeWebHook = async ({
     Authorization: `Bearer ${accessToken}`,
     ["Content-Type"]: "application/json"
   };
-  const whUrl = new URL("https://app.clio.com/api/v4/webhooks.json");
+  const whUrl = new URL(baseUrl + "/webhooks.json");
   if (!model) throw "Model is required";
   const data = { model };
   if (!url) throw "url is required";
@@ -667,5 +668,6 @@ export {
   makeFields,
   deauthorize,
   makeWebHook,
-  validateSignature
+  validateSignature,
+  baseHost
 };
