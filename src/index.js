@@ -223,8 +223,6 @@ const makeWebHook = async ({
       //Oh noes
       throw obj;
     }
-    console.log("I am giving you object now!!!");
-    console.log(text);
     return obj;
   } catch (e) {
     console.log(
@@ -238,10 +236,6 @@ const validateSignature = ({ signature, secret, body }) => {
   const cipher = createHmac("sha256", secret);
   cipher.update(body);
   const calculatedSignature = cipher.digest("hex");
-  console.log("Received signature", signature);
-  console.log("Body");
-  console.log(body);
-  console.log("Calculated signature", calculatedSignature);
   return signature !== calculatedSignature;
 };
 const create = async ({
